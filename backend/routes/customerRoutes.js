@@ -121,6 +121,51 @@ router.get('/age/:age', customerController.getCustomersByAge);
 router.get('/signup-quarter/:quarter', customerController.getCustomersBySignupQuarter);
 
 
+// --- BEHAVIORAL & METRIC ROUTING ---
+
+/**
+ * @route   GET /api/v1/customers/login-frequency/:value
+ * @desc    Fetch customers by login frequency (>= value)
+ * @access  Public
+ */
+router.get('/login-frequency/:value', customerController.getCustomersByLoginFrequency);
+
+/**
+ * @route   GET /api/v1/customers/session-duration/:value
+ * @desc    Fetch customers by session duration (>= value)
+ * @access  Public
+ */
+router.get('/session-duration/:value', customerController.getCustomersBySessionDuration);
+
+/**
+ * @route   GET /api/v1/customers/purchases/:value
+ * @desc    Fetch customers by total purchases (>= value)
+ * @access  Public
+ */
+router.get('/purchases/:value', customerController.getCustomersByPurchases);
+
+/**
+ * @route   GET /api/v1/customers/lifetime/:value
+ * @desc    Fetch customers by lifetime value (>= value)
+ * @access  Public
+ */
+router.get('/lifetime/:value', customerController.getCustomersByLifetimeValue);
+
+/**
+ * @route   GET /api/v1/customers/credit/:value
+ * @desc    Fetch customers by credit balance (>= value)
+ * @access  Public
+ */
+router.get('/credit/:value', customerController.getCustomersByCreditBalance);
+
+/**
+ * @route   GET /api/v1/customers/churn-status/:status
+ * @desc    Fetch customers using churn status
+ * @access  Public
+ */
+router.get('/churn-status/:status', customerController.getCustomersByChurnStatus);
+
+
 // --- BULK OPERATIONS ---
 
 /**
