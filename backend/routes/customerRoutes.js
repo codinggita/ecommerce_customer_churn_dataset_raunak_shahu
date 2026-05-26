@@ -83,6 +83,51 @@ router.get('/random', customerController.getRandomCustomer);
 router.get('/exists/:id', validateId, validate, customerController.checkCustomerExists);
 
 
+// --- STATIC CATEGORICAL SEGMENTS ---
+
+/**
+ * @route   GET /api/v1/customers/churned
+ * @desc    Fetch churned customers
+ * @access  Public
+ */
+router.get('/churned', customerController.getChurnedCustomers);
+
+/**
+ * @route   GET /api/v1/customers/active
+ * @desc    Fetch active customers
+ * @access  Public
+ */
+router.get('/active', customerController.getActiveCustomers);
+
+/**
+ * @route   GET /api/v1/customers/high-value
+ * @desc    Fetch customers with high lifetime value
+ * @access  Public
+ */
+router.get('/high-value', customerController.getHighValueCustomers);
+
+/**
+ * @route   GET /api/v1/customers/high-purchases
+ * @desc    Fetch customers with high purchases
+ * @access  Public
+ */
+router.get('/high-purchases', customerController.getHighPurchasesCustomers);
+
+/**
+ * @route   GET /api/v1/customers/high-credit
+ * @desc    Fetch customers with high credit balance
+ * @access  Public
+ */
+router.get('/high-credit', customerController.getHighCreditCustomers);
+
+/**
+ * @route   GET /api/v1/customers/high-engagement
+ * @desc    Fetch highly engaged customers
+ * @access  Public
+ */
+router.get('/high-engagement', customerController.getHighEngagementCustomers);
+
+
 // --- DEMOGRAPHIC SPECIFIC ROUTING ---
 
 /**
