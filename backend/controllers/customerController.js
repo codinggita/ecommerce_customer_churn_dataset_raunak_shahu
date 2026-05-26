@@ -1064,6 +1064,208 @@ const getFilteredHighDiscount = async (req, res, next) => {
 };
 
 /**
+ * Fetch customers filtered by high cart abandonment rate (cartAbandonmentRate >= 80)
+ * @route GET /api/v1/customers/filter/high-cart-abandonment
+ */
+const getFilteredHighCartAbandonment = async (req, res, next) => {
+  try {
+    const filter = { cartAbandonmentRate: { $gte: 80 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high cart abandonment rate fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers filtered by high engagement (loginFrequency >= 15 AND sessionDuration >= 30)
+ * @route GET /api/v1/customers/filter/high-engagement
+ */
+const getFilteredHighEngagement = async (req, res, next) => {
+  try {
+    const filter = { 
+      loginFrequency: { $gte: 15 }, 
+      sessionDuration: { $gte: 30 }, 
+      isDeleted: { $ne: true } 
+    };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high engagement fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers filtered by high reviews written (productReviewsWritten >= 5)
+ * @route GET /api/v1/customers/filter/high-reviews
+ */
+const getFilteredHighReviews = async (req, res, next) => {
+  try {
+    const filter = { productReviewsWritten: { $gte: 5 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high review count fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch churned customers filtered (churned === 1)
+ * @route GET /api/v1/customers/filter/churned
+ */
+const getFilteredChurned = async (req, res, next) => {
+  try {
+    const filter = { churned: 1, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Churned customers filtered fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch active customers filtered (churned === 0)
+ * @route GET /api/v1/customers/filter/active
+ */
+const getFilteredActive = async (req, res, next) => {
+  try {
+    const filter = { churned: 0, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Active customers filtered fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers filtered by low session duration (sessionDuration <= 10)
+ * @route GET /api/v1/customers/filter/low-session
+ */
+const getFilteredLowSession = async (req, res, next) => {
+  try {
+    const filter = { sessionDuration: { $lte: 10 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by low session duration fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers filtered by high session duration (sessionDuration >= 40)
+ * @route GET /api/v1/customers/filter/high-session
+ */
+const getFilteredHighSession = async (req, res, next) => {
+  try {
+    const filter = { sessionDuration: { $gte: 40 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high session duration fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers filtered by high order value (averageOrderValue >= 150)
+ * @route GET /api/v1/customers/filter/high-order-value
+ */
+const getFilteredHighOrderValue = async (req, res, next) => {
+  try {
+    const filter = { averageOrderValue: { $gte: 150 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high order value fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch loyal customers filtered (membershipYears >= 3)
+ * @route GET /api/v1/customers/filter/loyal
+ */
+const getFilteredLoyal = async (req, res, next) => {
+  try {
+    const filter = { membershipYears: { $gte: 3 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Loyal customers filtered fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Upload / Import customer records from JSON file
  */
 const importJson = async (req, res, next) => {
@@ -1163,6 +1365,15 @@ module.exports = {
   getFilteredHighLogin,
   getFilteredHighMobile,
   getFilteredHighDiscount,
+  getFilteredHighCartAbandonment,
+  getFilteredHighEngagement,
+  getFilteredHighReviews,
+  getFilteredChurned,
+  getFilteredActive,
+  getFilteredLowSession,
+  getFilteredHighSession,
+  getFilteredHighOrderValue,
+  getFilteredLoyal,
   importJson,
   clearCache,
 };

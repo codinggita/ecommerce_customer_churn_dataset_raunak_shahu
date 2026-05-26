@@ -278,6 +278,71 @@ router.get('/filter/high-mobile', customerController.getFilteredHighMobile);
  */
 router.get('/filter/high-discount', customerController.getFilteredHighDiscount);
 
+// --- SPECIFIC FILTERING ROUTES - PART 2 ---
+
+/**
+ * @route   GET /api/v1/customers/filter/high-cart-abandonment
+ * @desc    Fetch customers with high cart abandonment rate
+ * @access  Public
+ */
+router.get('/filter/high-cart-abandonment', customerController.getFilteredHighCartAbandonment);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-engagement
+ * @desc    Fetch customers with high engagement
+ * @access  Public
+ */
+router.get('/filter/high-engagement', customerController.getFilteredHighEngagement);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-reviews
+ * @desc    Fetch customers with high review counts
+ * @access  Public
+ */
+router.get('/filter/high-reviews', customerController.getFilteredHighReviews);
+
+/**
+ * @route   GET /api/v1/customers/filter/churned
+ * @desc    Fetch churned customers
+ * @access  Public
+ */
+router.get('/filter/churned', customerController.getFilteredChurned);
+
+/**
+ * @route   GET /api/v1/customers/filter/active
+ * @desc    Fetch active customers
+ * @access  Public
+ */
+router.get('/filter/active', customerController.getFilteredActive);
+
+/**
+ * @route   GET /api/v1/customers/filter/low-session
+ * @desc    Fetch customers with low session duration
+ * @access  Public
+ */
+router.get('/filter/low-session', customerController.getFilteredLowSession);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-session
+ * @desc    Fetch customers with high session duration
+ * @access  Public
+ */
+router.get('/filter/high-session', customerController.getFilteredHighSession);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-order-value
+ * @desc    Fetch customers with high order values
+ * @access  Public
+ */
+router.get('/filter/high-order-value', customerController.getFilteredHighOrderValue);
+
+/**
+ * @route   GET /api/v1/customers/filter/loyal
+ * @desc    Fetch loyal customers
+ * @access  Public
+ */
+router.get('/filter/loyal', customerController.getFilteredLoyal);
+
 
 // --- DEMOGRAPHIC SPECIFIC ROUTING ---
 
