@@ -197,6 +197,43 @@ router.get('/premium', customerController.getPremiumCustomers);
  */
 router.get('/recent', customerController.getRecentCustomers);
 
+// --- SPECIFIC SORTING ROUTES ---
+
+/**
+ * @route   GET /api/v1/customers/sort/age-desc
+ * @desc    Sort oldest first
+ * @access  Public
+ */
+router.get('/sort/age-desc', customerController.getCustomersSortedByAgeDesc);
+
+/**
+ * @route   GET /api/v1/customers/sort/purchases-desc
+ * @desc    Sort highest purchasers first
+ * @access  Public
+ */
+router.get('/sort/purchases-desc', customerController.getCustomersSortedByPurchasesDesc);
+
+/**
+ * @route   GET /api/v1/customers/sort/lifetime-desc
+ * @desc    Sort highest lifetime value first
+ * @access  Public
+ */
+router.get('/sort/lifetime-desc', customerController.getCustomersSortedByLifetimeDesc);
+
+/**
+ * @route   GET /api/v1/customers/sort/login-desc
+ * @desc    Sort most active first
+ * @access  Public
+ */
+router.get('/sort/login-desc', customerController.getCustomersSortedByLoginDesc);
+
+/**
+ * @route   GET /api/v1/customers/sort/credit-desc
+ * @desc    Sort highest credit balance first
+ * @access  Public
+ */
+router.get('/sort/credit-desc', customerController.getCustomersSortedByCreditDesc);
+
 
 // --- DEMOGRAPHIC SPECIFIC ROUTING ---
 

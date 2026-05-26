@@ -822,6 +822,116 @@ const getRecentCustomers = async (req, res, next) => {
 };
 
 /**
+ * Fetch customers sorted by age descending (oldest first)
+ * @route GET /api/v1/customers/sort/age-desc
+ */
+const getCustomersSortedByAgeDesc = async (req, res, next) => {
+  try {
+    const filter = { isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = '-age';
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers sorted by age descending fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers sorted by purchases descending (highest purchasers first)
+ * @route GET /api/v1/customers/sort/purchases-desc
+ */
+const getCustomersSortedByPurchasesDesc = async (req, res, next) => {
+  try {
+    const filter = { isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = '-purchases';
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers sorted by purchases descending fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers sorted by lifetime value descending (highest LTV first)
+ * @route GET /api/v1/customers/sort/lifetime-desc
+ */
+const getCustomersSortedByLifetimeDesc = async (req, res, next) => {
+  try {
+    const filter = { isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = '-lifetimeValue';
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers sorted by lifetime value descending fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers sorted by login frequency descending (most active first)
+ * @route GET /api/v1/customers/sort/login-desc
+ */
+const getCustomersSortedByLoginDesc = async (req, res, next) => {
+  try {
+    const filter = { isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = '-loginFrequency';
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers sorted by login frequency descending fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers sorted by credit balance descending (highest credit balance first)
+ * @route GET /api/v1/customers/sort/credit-desc
+ */
+const getCustomersSortedByCreditDesc = async (req, res, next) => {
+  try {
+    const filter = { isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = '-creditBalance';
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers sorted by credit balance descending fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Upload / Import customer records from JSON file
  */
 const importJson = async (req, res, next) => {
@@ -910,6 +1020,11 @@ module.exports = {
   getLoyalCustomers,
   getPremiumCustomers,
   getRecentCustomers,
+  getCustomersSortedByAgeDesc,
+  getCustomersSortedByPurchasesDesc,
+  getCustomersSortedByLifetimeDesc,
+  getCustomersSortedByLoginDesc,
+  getCustomersSortedByCreditDesc,
   importJson,
   clearCache,
 };
