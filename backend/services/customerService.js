@@ -2,11 +2,6 @@ const { Customer } = require('../models');
 
 /**
  * Fetch multiple customer records with filtering, sorting, and pagination
- * @param {Object} filter - MongoDB query filter object
- * @param {String} sortQuery - Sort field name (prepend '-' for desc)
- * @param {Number} limit - Number of records to return
- * @param {Number} skip - Number of records to skip
- * @returns {Object} { data, totalCount }
  */
 const getCustomers = async (filter, sortQuery, limit, skip) => {
   let sort = { createdAt: -1 }; // Default sort
@@ -29,8 +24,6 @@ const getCustomers = async (filter, sortQuery, limit, skip) => {
 
 /**
  * Fetch a single customer record by ID
- * @param {String} id - Customer MongoDB ID
- * @returns {Object} Customer document
  */
 const getCustomerById = async (id) => {
   return await Customer.findOne({ _id: id, isDeleted: { $ne: true } });
@@ -38,8 +31,6 @@ const getCustomerById = async (id) => {
 
 /**
  * Add a new customer record
- * @param {Object} customerData - Customer model data
- * @returns {Object} Created Customer document
  */
 const createCustomer = async (customerData) => {
   return await Customer.create(customerData);
@@ -47,12 +38,8 @@ const createCustomer = async (customerData) => {
 
 /**
  * Replace complete customer record (PUT)
- * @param {String} id - Customer MongoDB ID
- * @param {Object} updateData - Replacement data
- * @returns {Object} Replaced Customer document
  */
 const replaceCustomer = async (id, updateData) => {
-  // overwrite: true replaces the document while preserving _id
   return await Customer.findOneAndReplace(
     { _id: id, isDeleted: { $ne: true } },
     { ...updateData, isDeleted: false },
@@ -62,9 +49,6 @@ const replaceCustomer = async (id, updateData) => {
 
 /**
  * Update specific customer fields (PATCH)
- * @param {String} id - Customer MongoDB ID
- * @param {Object} updateData - Partial update fields
- * @returns {Object} Updated Customer document
  */
 const updateCustomer = async (id, updateData) => {
   return await Customer.findOneAndUpdate(
@@ -75,9 +59,7 @@ const updateCustomer = async (id, updateData) => {
 };
 
 /**
- * Soft delete a customer record by setting isDeleted: true
- * @param {String} id - Customer MongoDB ID
- * @returns {Object} Soft-deleted Customer document
+ * Soft delete a customer record
  */
 const deleteCustomer = async (id) => {
   return await Customer.findOneAndUpdate(
@@ -87,6 +69,77 @@ const deleteCustomer = async (id) => {
   );
 };
 
+/**
+ * Check if customer exists by ID
+ * @param {String} id - MongoDB ID
+ * @returns {Boolean}
+ */
+const checkCustomerExists = async (id) => {
+  const count = await Customer.countDocuments({ _id: id, isDeleted: { $ne: true } });
+  return count > 0;
+};
+
+/**
+ * Create multiple customer records (bulk-create)
+ * @param {Array} customersData - Array of customer documents
+ * @returns {Array} Created customer documents
+ */
+const bulkCreateCustomers = async (customersData) => {
+  return await Customer.insertMany(customersData, { ordered: false });
+};
+
+/**
+ * Update multiple customer records together (bulk-update)
+ * Supports updating a list of individual updates or updating a common payload to multiple IDs
+ */
+const bulkUpdateCustomers = async (updatesPayload) => {
+  const { ids, updates, list } = updatesPayload;
+
+  // Case 1: Same update applied to multiple IDs
+  if (ids && Array.isArray(ids) && updates) {
+    return await Customer.updateMany(
+      { _id: { $in: ids }, isDeleted: { $ne: true } },
+      { $set: updates }
+    );
+  }
+
+  // Case 2: Individual updates for different documents
+  if (list && Array.isArray(list)) {
+    const operations = list.map(item => ({
+      updateOne: {
+        filter: { _id: item.id, isDeleted: { $ne: true } },
+        update: { $set: item.data },
+      }
+    }));
+    return await Customer.bulkWrite(operations);
+  }
+
+  throw new Error('Invalid bulk update payload format');
+};
+
+/**
+ * Soft-delete multiple customer records together (bulk-delete)
+ * @param {Array} ids - Array of MongoDB IDs
+ */
+const bulkDeleteCustomers = async (ids) => {
+  return await Customer.updateMany(
+    { _id: { $in: ids }, isDeleted: { $ne: true } },
+    { $set: { isDeleted: true } }
+  );
+};
+
+/**
+ * Retrieve a random customer document using aggregation
+ * @returns {Object} Random Customer document
+ */
+const getRandomCustomer = async () => {
+  const results = await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    { $sample: { size: 1 } }
+  ]);
+  return results.length > 0 ? results[0] : null;
+};
+
 module.exports = {
   getCustomers,
   getCustomerById,
@@ -94,4 +147,9 @@ module.exports = {
   replaceCustomer,
   updateCustomer,
   deleteCustomer,
+  checkCustomerExists,
+  bulkCreateCustomers,
+  bulkUpdateCustomers,
+  bulkDeleteCustomers,
+  getRandomCustomer,
 };

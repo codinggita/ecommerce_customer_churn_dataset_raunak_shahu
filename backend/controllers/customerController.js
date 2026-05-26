@@ -6,9 +6,7 @@ const { buildCustomerFilter } = require('../utils/filterBuilder');
 const { getPaginationParams, buildPaginationMetadata } = require('../utils/paginationHelper');
 
 /**
- * @desc    Fetch multiple customer records with filters, pagination, and sorting
- * @route   GET /api/v1/customers
- * @access  Public
+ * Fetch multiple customer records (filters, pagination, sorting)
  */
 const getCustomers = async (req, res, next) => {
   try {
@@ -29,9 +27,7 @@ const getCustomers = async (req, res, next) => {
 };
 
 /**
- * @desc    Fetch a single customer record by ID
- * @route   GET /api/v1/customers/:id
- * @access  Public
+ * Fetch a single customer record by ID
  */
 const getCustomerById = async (req, res, next) => {
   try {
@@ -48,9 +44,7 @@ const getCustomerById = async (req, res, next) => {
 };
 
 /**
- * @desc    Create a new customer record
- * @route   POST /api/v1/customers
- * @access  Public (Admin protected in production)
+ * Create a new customer record
  */
 const createCustomer = async (req, res, next) => {
   try {
@@ -62,9 +56,7 @@ const createCustomer = async (req, res, next) => {
 };
 
 /**
- * @desc    Replace a customer record entirely (PUT)
- * @route   PUT /api/v1/customers/:id
- * @access  Public (Admin protected in production)
+ * Replace a customer record entirely (PUT)
  */
 const replaceCustomer = async (req, res, next) => {
   try {
@@ -81,9 +73,7 @@ const replaceCustomer = async (req, res, next) => {
 };
 
 /**
- * @desc    Update specific fields of a customer record (PATCH)
- * @route   PATCH /api/v1/customers/:id
- * @access  Public (Admin protected in production)
+ * Update specific fields of a customer record (PATCH)
  */
 const updateCustomer = async (req, res, next) => {
   try {
@@ -100,9 +90,7 @@ const updateCustomer = async (req, res, next) => {
 };
 
 /**
- * @desc    Delete a customer record (Soft delete)
- * @route   DELETE /api/v1/customers/:id
- * @access  Public (Admin protected in production)
+ * Delete a customer record (Soft delete)
  */
 const deleteCustomer = async (req, res, next) => {
   try {
@@ -122,9 +110,86 @@ const deleteCustomer = async (req, res, next) => {
 };
 
 /**
- * @desc    Upload / Import customer records from JSON file
- * @route   POST /api/v1/customers/import-json
- * @access  Public
+ * Check if customer exists by ID
+ * @route GET /api/v1/customers/exists/:id
+ */
+const checkCustomerExists = async (req, res, next) => {
+  try {
+    const exists = await customerService.checkCustomerExists(req.params.id);
+    return ApiResponse.success(res, `Customer check: ${exists ? 'exists' : 'does not exist'}`, {
+      exists,
+      id: req.params.id,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Create multiple customer records together (bulk-create)
+ * @route POST /api/v1/customers/bulk-create
+ */
+const bulkCreateCustomers = async (req, res, next) => {
+  try {
+    const created = await customerService.bulkCreateCustomers(req.body.customers);
+    return ApiResponse.success(res, `Successfully created ${created.length} customers in bulk`, {
+      count: created.length,
+      customers: created,
+    }, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update multiple customer records together (bulk-update)
+ * @route PATCH /api/v1/customers/bulk-update
+ */
+const bulkUpdateCustomers = async (req, res, next) => {
+  try {
+    const result = await customerService.bulkUpdateCustomers(req.body);
+    return ApiResponse.success(res, 'Bulk update completed successfully', {
+      matchedCount: result.matchedCount || result.nMatched || 0,
+      modifiedCount: result.modifiedCount || result.nModified || 0,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete multiple customer records together (bulk-delete)
+ * @route DELETE /api/v1/customers/bulk-delete
+ */
+const bulkDeleteCustomers = async (req, res, next) => {
+  try {
+    const result = await customerService.bulkDeleteCustomers(req.body.ids);
+    return ApiResponse.success(res, `Bulk delete completed: soft-deleted ${result.modifiedCount || result.nModified || 0} records`, {
+      deletedCount: result.modifiedCount || result.nModified || 0,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch a random customer record
+ * @route GET /api/v1/customers/random
+ */
+const getRandomCustomer = async (req, res, next) => {
+  try {
+    const customer = await customerService.getRandomCustomer();
+    if (!customer) {
+      return ApiResponse.error(res, 'No customers available in database', null, 404);
+    }
+    return ApiResponse.success(res, 'Random customer retrieved successfully', customer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Upload / Import customer records from JSON file
  */
 const importJson = async (req, res, next) => {
   try {
@@ -159,9 +224,7 @@ const importJson = async (req, res, next) => {
 };
 
 /**
- * @desc    Clear API query cache keys
- * @route   POST /api/v1/customers/cache/clear
- * @access  Public
+ * Clear API query cache keys
  */
 const clearCache = async (req, res, next) => {
   try {
@@ -182,6 +245,11 @@ module.exports = {
   replaceCustomer,
   updateCustomer,
   deleteCustomer,
+  checkCustomerExists,
+  bulkCreateCustomers,
+  bulkUpdateCustomers,
+  bulkDeleteCustomers,
+  getRandomCustomer,
   importJson,
   clearCache,
 };
