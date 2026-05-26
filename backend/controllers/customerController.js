@@ -111,7 +111,6 @@ const deleteCustomer = async (req, res, next) => {
 
 /**
  * Check if customer exists by ID
- * @route GET /api/v1/customers/exists/:id
  */
 const checkCustomerExists = async (req, res, next) => {
   try {
@@ -127,7 +126,6 @@ const checkCustomerExists = async (req, res, next) => {
 
 /**
  * Create multiple customer records together (bulk-create)
- * @route POST /api/v1/customers/bulk-create
  */
 const bulkCreateCustomers = async (req, res, next) => {
   try {
@@ -143,7 +141,6 @@ const bulkCreateCustomers = async (req, res, next) => {
 
 /**
  * Update multiple customer records together (bulk-update)
- * @route PATCH /api/v1/customers/bulk-update
  */
 const bulkUpdateCustomers = async (req, res, next) => {
   try {
@@ -159,7 +156,6 @@ const bulkUpdateCustomers = async (req, res, next) => {
 
 /**
  * Delete multiple customer records together (bulk-delete)
- * @route DELETE /api/v1/customers/bulk-delete
  */
 const bulkDeleteCustomers = async (req, res, next) => {
   try {
@@ -174,7 +170,6 @@ const bulkDeleteCustomers = async (req, res, next) => {
 
 /**
  * Fetch a random customer record
- * @route GET /api/v1/customers/random
  */
 const getRandomCustomer = async (req, res, next) => {
   try {
@@ -183,6 +178,127 @@ const getRandomCustomer = async (req, res, next) => {
       return ApiResponse.error(res, 'No customers available in database', null, 404);
     }
     return ApiResponse.success(res, 'Random customer retrieved successfully', customer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by country with pagination
+ * @route GET /api/v1/customers/country/:country
+ */
+const getCustomersByCountry = async (req, res, next) => {
+  try {
+    const { country } = req.params;
+    const filter = { country: { $regex: new RegExp(`^${country}$`, 'i') }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers from country '${country}' fetched successfully`, {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by city with pagination
+ * @route GET /api/v1/customers/city/:city
+ */
+const getCustomersByCity = async (req, res, next) => {
+  try {
+    const { city } = req.params;
+    const filter = { city: { $regex: new RegExp(`^${city}$`, 'i') }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers from city '${city}' fetched successfully`, {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by gender with pagination
+ * @route GET /api/v1/customers/gender/:gender
+ */
+const getCustomersByGender = async (req, res, next) => {
+  try {
+    const { gender } = req.params;
+    const filter = { gender: { $regex: new RegExp(`^${gender}$`, 'i') }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers with gender '${gender}' fetched successfully`, {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by age with pagination
+ * @route GET /api/v1/customers/age/:age
+ */
+const getCustomersByAge = async (req, res, next) => {
+  try {
+    const { age } = req.params;
+    const ageNum = parseInt(age, 10);
+
+    if (isNaN(ageNum)) {
+      return ApiResponse.error(res, 'Invalid age value. Age must be a numeric integer.', null, 400);
+    }
+
+    const filter = { age: ageNum, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers of age ${age} fetched successfully`, {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by signup quarter with pagination
+ * @route GET /api/v1/customers/signup-quarter/:quarter
+ */
+const getCustomersBySignupQuarter = async (req, res, next) => {
+  try {
+    const { quarter } = req.params;
+    const filter = { signupQuarter: { $regex: new RegExp(`^${quarter}$`, 'i') }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers registered in quarter '${quarter}' fetched successfully`, {
+      customers: data,
+      pagination,
+    });
   } catch (error) {
     next(error);
   }
@@ -250,6 +366,11 @@ module.exports = {
   bulkUpdateCustomers,
   bulkDeleteCustomers,
   getRandomCustomer,
+  getCustomersByCountry,
+  getCustomersByCity,
+  getCustomersByGender,
+  getCustomersByAge,
+  getCustomersBySignupQuarter,
   importJson,
   clearCache,
 };

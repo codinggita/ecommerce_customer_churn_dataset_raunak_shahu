@@ -83,6 +83,44 @@ router.get('/random', customerController.getRandomCustomer);
 router.get('/exists/:id', validateId, validate, customerController.checkCustomerExists);
 
 
+// --- DEMOGRAPHIC SPECIFIC ROUTING ---
+
+/**
+ * @route   GET /api/v1/customers/country/:country
+ * @desc    Fetch customers belonging to a specific country
+ * @access  Public
+ */
+router.get('/country/:country', customerController.getCustomersByCountry);
+
+/**
+ * @route   GET /api/v1/customers/city/:city
+ * @desc    Fetch customers belonging to a specific city
+ * @access  Public
+ */
+router.get('/city/:city', customerController.getCustomersByCity);
+
+/**
+ * @route   GET /api/v1/customers/gender/:gender
+ * @desc    Fetch customers using gender
+ * @access  Public
+ */
+router.get('/gender/:gender', customerController.getCustomersByGender);
+
+/**
+ * @route   GET /api/v1/customers/age/:age
+ * @desc    Fetch customers using age
+ * @access  Public
+ */
+router.get('/age/:age', customerController.getCustomersByAge);
+
+/**
+ * @route   GET /api/v1/customers/signup-quarter/:quarter
+ * @desc    Fetch customers using signup quarter
+ * @access  Public
+ */
+router.get('/signup-quarter/:quarter', customerController.getCustomersBySignupQuarter);
+
+
 // --- BULK OPERATIONS ---
 
 /**
