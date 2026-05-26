@@ -185,7 +185,6 @@ const getRandomCustomer = async (req, res, next) => {
 
 /**
  * Fetch customers by country with pagination
- * @route GET /api/v1/customers/country/:country
  */
 const getCustomersByCountry = async (req, res, next) => {
   try {
@@ -208,7 +207,6 @@ const getCustomersByCountry = async (req, res, next) => {
 
 /**
  * Fetch customers by city with pagination
- * @route GET /api/v1/customers/city/:city
  */
 const getCustomersByCity = async (req, res, next) => {
   try {
@@ -231,7 +229,6 @@ const getCustomersByCity = async (req, res, next) => {
 
 /**
  * Fetch customers by gender with pagination
- * @route GET /api/v1/customers/gender/:gender
  */
 const getCustomersByGender = async (req, res, next) => {
   try {
@@ -254,7 +251,6 @@ const getCustomersByGender = async (req, res, next) => {
 
 /**
  * Fetch customers by age with pagination
- * @route GET /api/v1/customers/age/:age
  */
 const getCustomersByAge = async (req, res, next) => {
   try {
@@ -283,7 +279,6 @@ const getCustomersByAge = async (req, res, next) => {
 
 /**
  * Fetch customers by signup quarter with pagination
- * @route GET /api/v1/customers/signup-quarter/:quarter
  */
 const getCustomersBySignupQuarter = async (req, res, next) => {
   try {
@@ -296,6 +291,185 @@ const getCustomersBySignupQuarter = async (req, res, next) => {
     const pagination = buildPaginationMetadata(totalCount, page, limit);
 
     return ApiResponse.success(res, `Customers registered in quarter '${quarter}' fetched successfully`, {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by login frequency (greater than or equal to value)
+ * @route GET /api/v1/customers/login-frequency/:value
+ */
+const getCustomersByLoginFrequency = async (req, res, next) => {
+  try {
+    const { value } = req.params;
+    const numericVal = Number(value);
+    
+    if (isNaN(numericVal)) {
+      return ApiResponse.error(res, 'Value must be a valid number', null, 400);
+    }
+
+    const filter = { loginFrequency: { $gte: numericVal }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers with login frequency >= ${value} fetched successfully`, {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by average session duration (greater than or equal to value)
+ * @route GET /api/v1/customers/session-duration/:value
+ */
+const getCustomersBySessionDuration = async (req, res, next) => {
+  try {
+    const { value } = req.params;
+    const numericVal = Number(value);
+    
+    if (isNaN(numericVal)) {
+      return ApiResponse.error(res, 'Value must be a valid number', null, 400);
+    }
+
+    const filter = { sessionDuration: { $gte: numericVal }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers with session duration >= ${value} fetched successfully`, {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by total purchases (greater than or equal to value)
+ * @route GET /api/v1/customers/purchases/:value
+ */
+const getCustomersByPurchases = async (req, res, next) => {
+  try {
+    const { value } = req.params;
+    const numericVal = Number(value);
+    
+    if (isNaN(numericVal)) {
+      return ApiResponse.error(res, 'Value must be a valid number', null, 400);
+    }
+
+    const filter = { purchases: { $gte: numericVal }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers with total purchases >= ${value} fetched successfully`, {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by lifetime value (greater than or equal to value)
+ * @route GET /api/v1/customers/lifetime/:value
+ */
+const getCustomersByLifetimeValue = async (req, res, next) => {
+  try {
+    const { value } = req.params;
+    const numericVal = Number(value);
+    
+    if (isNaN(numericVal)) {
+      return ApiResponse.error(res, 'Value must be a valid number', null, 400);
+    }
+
+    const filter = { lifetimeValue: { $gte: numericVal }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers with lifetime value >= ${value} fetched successfully`, {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by credit balance (greater than or equal to value)
+ * @route GET /api/v1/customers/credit/:value
+ */
+const getCustomersByCreditBalance = async (req, res, next) => {
+  try {
+    const { value } = req.params;
+    const numericVal = Number(value);
+    
+    if (isNaN(numericVal)) {
+      return ApiResponse.error(res, 'Value must be a valid number', null, 400);
+    }
+
+    const filter = { creditBalance: { $gte: numericVal }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers with credit balance >= ${value} fetched successfully`, {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers by churn status
+ * Supports '1' or 'churned', '0' or 'active'
+ * @route GET /api/v1/customers/churn-status/:status
+ */
+const getCustomersByChurnStatus = async (req, res, next) => {
+  try {
+    const { status } = req.params;
+    let churnedVal;
+
+    if (status === '1' || status.toLowerCase() === 'churned') {
+      churnedVal = 1;
+    } else if (status === '0' || status.toLowerCase() === 'active') {
+      churnedVal = 0;
+    } else {
+      return ApiResponse.error(res, 'Invalid churn status. Allowed values are: 0, 1, active, or churned.', null, 400);
+    }
+
+    const filter = { churned: churnedVal, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, `Customers with churn status '${status}' fetched successfully`, {
       customers: data,
       pagination,
     });
@@ -371,6 +545,12 @@ module.exports = {
   getCustomersByGender,
   getCustomersByAge,
   getCustomersBySignupQuarter,
+  getCustomersByLoginFrequency,
+  getCustomersBySessionDuration,
+  getCustomersByPurchases,
+  getCustomersByLifetimeValue,
+  getCustomersByCreditBalance,
+  getCustomersByChurnStatus,
   importJson,
   clearCache,
 };
