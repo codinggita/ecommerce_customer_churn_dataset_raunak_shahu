@@ -712,6 +712,116 @@ const getTopReviewers = async (req, res, next) => {
 };
 
 /**
+ * Fetch customers with high cart abandonment rate (cartAbandonmentRate >= 80)
+ * @route GET /api/v1/customers/high-cart-abandonment
+ */
+const getHighCartAbandonmentCustomers = async (req, res, next) => {
+  try {
+    const filter = { cartAbandonmentRate: { $gte: 80 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'High cart abandonment customers fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers with frequent logins (loginFrequency >= 12)
+ * @route GET /api/v1/customers/frequent-logins
+ */
+const getFrequentLoginsCustomers = async (req, res, next) => {
+  try {
+    const filter = { loginFrequency: { $gte: 12 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Frequent login customers fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch loyal customers (membershipYears >= 3)
+ * @route GET /api/v1/customers/loyal
+ */
+const getLoyalCustomers = async (req, res, next) => {
+  try {
+    const filter = { membershipYears: { $gte: 3 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Loyal customers fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch premium customers (lifetimeValue >= 1500)
+ * @route GET /api/v1/customers/premium
+ */
+const getPremiumCustomers = async (req, res, next) => {
+  try {
+    const filter = { lifetimeValue: { $gte: 1500 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Premium customers fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch recently active customers (daysSinceLastPurchase <= 14)
+ * @route GET /api/v1/customers/recent
+ */
+const getRecentCustomers = async (req, res, next) => {
+  try {
+    const filter = { daysSinceLastPurchase: { $lte: 14 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Recently active customers fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Upload / Import customer records from JSON file
  */
 const importJson = async (req, res, next) => {
@@ -795,6 +905,11 @@ module.exports = {
   getRecentBuyers,
   getInactiveCustomers,
   getTopReviewers,
+  getHighCartAbandonmentCustomers,
+  getFrequentLoginsCustomers,
+  getLoyalCustomers,
+  getPremiumCustomers,
+  getRecentCustomers,
   importJson,
   clearCache,
 };

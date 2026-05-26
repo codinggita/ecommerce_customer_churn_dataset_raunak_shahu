@@ -162,6 +162,41 @@ router.get('/inactive', customerController.getInactiveCustomers);
  */
 router.get('/top-reviewers', customerController.getTopReviewers);
 
+/**
+ * @route   GET /api/v1/customers/high-cart-abandonment
+ * @desc    Fetch high cart abandoners
+ * @access  Public
+ */
+router.get('/high-cart-abandonment', customerController.getHighCartAbandonmentCustomers);
+
+/**
+ * @route   GET /api/v1/customers/frequent-logins
+ * @desc    Fetch frequent logins
+ * @access  Public
+ */
+router.get('/frequent-logins', customerController.getFrequentLoginsCustomers);
+
+/**
+ * @route   GET /api/v1/customers/loyal
+ * @desc    Fetch loyal customers by membership years
+ * @access  Public
+ */
+router.get('/loyal', customerController.getLoyalCustomers);
+
+/**
+ * @route   GET /api/v1/customers/premium
+ * @desc    Fetch premium customer analytics status
+ * @access  Public
+ */
+router.get('/premium', customerController.getPremiumCustomers);
+
+/**
+ * @route   GET /api/v1/customers/recent
+ * @desc    Fetch recently active customers
+ * @access  Public
+ */
+router.get('/recent', customerController.getRecentCustomers);
+
 
 // --- DEMOGRAPHIC SPECIFIC ROUTING ---
 
