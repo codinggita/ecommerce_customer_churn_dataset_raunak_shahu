@@ -473,7 +473,6 @@ const getCustomersByChurnStatus = async (req, res, next) => {
 
 /**
  * Fetch churned customers
- * @route GET /api/v1/customers/churned
  */
 const getChurnedCustomers = async (req, res, next) => {
   try {
@@ -495,7 +494,6 @@ const getChurnedCustomers = async (req, res, next) => {
 
 /**
  * Fetch active customers
- * @route GET /api/v1/customers/active
  */
 const getActiveCustomers = async (req, res, next) => {
   try {
@@ -517,7 +515,6 @@ const getActiveCustomers = async (req, res, next) => {
 
 /**
  * Fetch high value customers (lifetimeValue >= 1000)
- * @route GET /api/v1/customers/high-value
  */
 const getHighValueCustomers = async (req, res, next) => {
   try {
@@ -539,7 +536,6 @@ const getHighValueCustomers = async (req, res, next) => {
 
 /**
  * Fetch high purchasing customers (purchases >= 10)
- * @route GET /api/v1/customers/high-purchases
  */
 const getHighPurchasesCustomers = async (req, res, next) => {
   try {
@@ -561,7 +557,6 @@ const getHighPurchasesCustomers = async (req, res, next) => {
 
 /**
  * Fetch customers with high credit balance (creditBalance >= 2000)
- * @route GET /api/v1/customers/high-credit
  */
 const getHighCreditCustomers = async (req, res, next) => {
   try {
@@ -583,7 +578,6 @@ const getHighCreditCustomers = async (req, res, next) => {
 
 /**
  * Fetch highly engaged customers (loginFrequency >= 15 AND sessionDuration >= 30)
- * @route GET /api/v1/customers/high-engagement
  */
 const getHighEngagementCustomers = async (req, res, next) => {
   try {
@@ -599,6 +593,116 @@ const getHighEngagementCustomers = async (req, res, next) => {
     const pagination = buildPaginationMetadata(totalCount, page, limit);
 
     return ApiResponse.success(res, 'Highly engaged customers fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers with high mobile app usage (mobileUsage >= 20)
+ * @route GET /api/v1/customers/high-mobile-usage
+ */
+const getHighMobileUsageCustomers = async (req, res, next) => {
+  try {
+    const filter = { mobileUsage: { $gte: 20 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'High mobile usage customers fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers with high discount usage (discountRate >= 40)
+ * @route GET /api/v1/customers/high-discount-users
+ */
+const getHighDiscountCustomers = async (req, res, next) => {
+  try {
+    const filter = { discountRate: { $gte: 40 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'High discount usage customers fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch recently active buyers (daysSinceLastPurchase <= 30)
+ * @route GET /api/v1/customers/recent-buyers
+ */
+const getRecentBuyers = async (req, res, next) => {
+  try {
+    const filter = { daysSinceLastPurchase: { $lte: 30 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Recently active buyers fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch inactive buyers (daysSinceLastPurchase >= 90)
+ * @route GET /api/v1/customers/inactive
+ */
+const getInactiveCustomers = async (req, res, next) => {
+  try {
+    const filter = { daysSinceLastPurchase: { $gte: 90 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Inactive customers fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers writing the most reviews (productReviewsWritten >= 5)
+ * @route GET /api/v1/customers/top-reviewers
+ */
+const getTopReviewers = async (req, res, next) => {
+  try {
+    const filter = { productReviewsWritten: { $gte: 5 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Top reviewers fetched successfully', {
       customers: data,
       pagination,
     });
@@ -686,6 +790,11 @@ module.exports = {
   getHighPurchasesCustomers,
   getHighCreditCustomers,
   getHighEngagementCustomers,
+  getHighMobileUsageCustomers,
+  getHighDiscountCustomers,
+  getRecentBuyers,
+  getInactiveCustomers,
+  getTopReviewers,
   importJson,
   clearCache,
 };

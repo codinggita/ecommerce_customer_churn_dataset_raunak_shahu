@@ -127,6 +127,41 @@ router.get('/high-credit', customerController.getHighCreditCustomers);
  */
 router.get('/high-engagement', customerController.getHighEngagementCustomers);
 
+/**
+ * @route   GET /api/v1/customers/high-mobile-usage
+ * @desc    Fetch high mobile app users
+ * @access  Public
+ */
+router.get('/high-mobile-usage', customerController.getHighMobileUsageCustomers);
+
+/**
+ * @route   GET /api/v1/customers/high-discount-users
+ * @desc    Fetch high discount rate users
+ * @access  Public
+ */
+router.get('/high-discount-users', customerController.getHighDiscountCustomers);
+
+/**
+ * @route   GET /api/v1/customers/recent-buyers
+ * @desc    Fetch recently active buyers
+ * @access  Public
+ */
+router.get('/recent-buyers', customerController.getRecentBuyers);
+
+/**
+ * @route   GET /api/v1/customers/inactive
+ * @desc    Fetch inactive buyers
+ * @access  Public
+ */
+router.get('/inactive', customerController.getInactiveCustomers);
+
+/**
+ * @route   GET /api/v1/customers/top-reviewers
+ * @desc    Fetch customers writing most reviews
+ * @access  Public
+ */
+router.get('/top-reviewers', customerController.getTopReviewers);
+
 
 // --- DEMOGRAPHIC SPECIFIC ROUTING ---
 
