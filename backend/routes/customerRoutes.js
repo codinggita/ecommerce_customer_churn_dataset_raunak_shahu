@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const ApiResponse = require('../utils/apiResponse');
 const constants = require('../config/constants');
+const upload = require('../middlewares/uploadMiddleware');
+const customerController = require('../controllers/customerController');
 
 /**
  * @route   GET /api/v1/customers/system/health
@@ -40,5 +42,19 @@ router.get('/system/config', (req, res) => {
     debugMode: process.env.DEBUG_MODE === 'true',
   });
 });
+
+/**
+ * @route   POST /api/v1/customers/import-json
+ * @desc    Import/upload customer records from a JSON file
+ * @access  Public (for development/seeding)
+ */
+router.post('/import-json', upload.single('file'), customerController.importJson);
+
+/**
+ * @route   POST /api/v1/customers/cache/clear
+ * @desc    Clear API query cache
+ * @access  Public (for now)
+ */
+router.post('/cache/clear', customerController.clearCache);
 
 module.exports = router;
