@@ -234,6 +234,50 @@ router.get('/sort/login-desc', customerController.getCustomersSortedByLoginDesc)
  */
 router.get('/sort/credit-desc', customerController.getCustomersSortedByCreditDesc);
 
+// --- SPECIFIC FILTERING ROUTES - PART 1 ---
+
+/**
+ * @route   GET /api/v1/customers/filter/high-purchases
+ * @desc    Fetch customers with high purchases
+ * @access  Public
+ */
+router.get('/filter/high-purchases', customerController.getFilteredHighPurchases);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-lifetime
+ * @desc    Fetch customers with high lifetime value
+ * @access  Public
+ */
+router.get('/filter/high-lifetime', customerController.getFilteredHighLifetime);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-credit
+ * @desc    Fetch customers with high credit balance
+ * @access  Public
+ */
+router.get('/filter/high-credit', customerController.getFilteredHighCredit);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-login
+ * @desc    Fetch customers with high login frequency
+ * @access  Public
+ */
+router.get('/filter/high-login', customerController.getFilteredHighLogin);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-mobile
+ * @desc    Fetch customers with high mobile usage
+ * @access  Public
+ */
+router.get('/filter/high-mobile', customerController.getFilteredHighMobile);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-discount
+ * @desc    Fetch customers with high discount rate
+ * @access  Public
+ */
+router.get('/filter/high-discount', customerController.getFilteredHighDiscount);
+
 
 // --- DEMOGRAPHIC SPECIFIC ROUTING ---
 

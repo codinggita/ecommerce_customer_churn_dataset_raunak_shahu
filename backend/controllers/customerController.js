@@ -932,6 +932,138 @@ const getCustomersSortedByCreditDesc = async (req, res, next) => {
 };
 
 /**
+ * Fetch customers filtered by high purchases (purchases >= 10)
+ * @route GET /api/v1/customers/filter/high-purchases
+ */
+const getFilteredHighPurchases = async (req, res, next) => {
+  try {
+    const filter = { purchases: { $gte: 10 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high purchases fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers filtered by high lifetime value (lifetimeValue >= 1000)
+ * @route GET /api/v1/customers/filter/high-lifetime
+ */
+const getFilteredHighLifetime = async (req, res, next) => {
+  try {
+    const filter = { lifetimeValue: { $gte: 1000 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high lifetime value fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers filtered by high credit balance (creditBalance >= 2000)
+ * @route GET /api/v1/customers/filter/high-credit
+ */
+const getFilteredHighCredit = async (req, res, next) => {
+  try {
+    const filter = { creditBalance: { $gte: 2000 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high credit balance fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers filtered by high login frequency (loginFrequency >= 12)
+ * @route GET /api/v1/customers/filter/high-login
+ */
+const getFilteredHighLogin = async (req, res, next) => {
+  try {
+    const filter = { loginFrequency: { $gte: 12 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high login frequency fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers filtered by high mobile usage (mobileUsage >= 20)
+ * @route GET /api/v1/customers/filter/high-mobile
+ */
+const getFilteredHighMobile = async (req, res, next) => {
+  try {
+    const filter = { mobileUsage: { $gte: 20 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high mobile usage fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customers filtered by high discount rate (discountRate >= 40)
+ * @route GET /api/v1/customers/filter/high-discount
+ */
+const getFilteredHighDiscount = async (req, res, next) => {
+  try {
+    const filter = { discountRate: { $gte: 40 }, isDeleted: { $ne: true } };
+    const { page, limit, skip } = getPaginationParams(req.query);
+    const sort = req.query.sort;
+
+    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const pagination = buildPaginationMetadata(totalCount, page, limit);
+
+    return ApiResponse.success(res, 'Customers filtered by high discount rate fetched successfully', {
+      customers: data,
+      pagination,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Upload / Import customer records from JSON file
  */
 const importJson = async (req, res, next) => {
@@ -1025,6 +1157,12 @@ module.exports = {
   getCustomersSortedByLifetimeDesc,
   getCustomersSortedByLoginDesc,
   getCustomersSortedByCreditDesc,
+  getFilteredHighPurchases,
+  getFilteredHighLifetime,
+  getFilteredHighCredit,
+  getFilteredHighLogin,
+  getFilteredHighMobile,
+  getFilteredHighDiscount,
   importJson,
   clearCache,
 };
