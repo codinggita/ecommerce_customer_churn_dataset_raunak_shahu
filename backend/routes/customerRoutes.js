@@ -4,7 +4,14 @@ const ApiResponse = require('../utils/apiResponse');
 const constants = require('../config/constants');
 const upload = require('../middlewares/uploadMiddleware');
 const customerController = require('../controllers/customerController');
-const { validateCreate, validateUpdate, validateId } = require('../validations/customerValidation');
+const { 
+  validateCreate, 
+  validateUpdate, 
+  validateId,
+  validateBulkCreate,
+  validateBulkUpdate,
+  validateBulkDelete 
+} = require('../validations/customerValidation');
 const validate = require('../middlewares/validationMiddleware');
 
 // --- SYSTEM & UTILITY ROUTES (Place before parameter routes) ---
@@ -60,6 +67,44 @@ router.post('/import-json', upload.single('file'), customerController.importJson
  * @access  Public
  */
 router.post('/cache/clear', customerController.clearCache);
+
+/**
+ * @route   GET /api/v1/customers/random
+ * @desc    Fetch a random customer record (Must be registered before /:id)
+ * @access  Public
+ */
+router.get('/random', customerController.getRandomCustomer);
+
+/**
+ * @route   GET /api/v1/customers/exists/:id
+ * @desc    Check whether customer exists or not (Must be registered before /:id)
+ * @access  Public
+ */
+router.get('/exists/:id', validateId, validate, customerController.checkCustomerExists);
+
+
+// --- BULK OPERATIONS ---
+
+/**
+ * @route   POST /api/v1/customers/bulk-create
+ * @desc    Insert multiple customer records together
+ * @access  Public
+ */
+router.post('/bulk-create', validateBulkCreate, validate, customerController.bulkCreateCustomers);
+
+/**
+ * @route   PATCH /api/v1/customers/bulk-update
+ * @desc    Update multiple customer records together
+ * @access  Public
+ */
+router.patch('/bulk-update', validateBulkUpdate, validate, customerController.bulkUpdateCustomers);
+
+/**
+ * @route   DELETE /api/v1/customers/bulk-delete
+ * @desc    Delete multiple customer records
+ * @access  Public
+ */
+router.delete('/bulk-delete', validateBulkDelete, validate, customerController.bulkDeleteCustomers);
 
 
 // --- CORE CRUD ROUTES ---

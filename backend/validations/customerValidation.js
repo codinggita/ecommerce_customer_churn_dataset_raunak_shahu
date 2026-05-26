@@ -64,8 +64,35 @@ const validateId = [
   param('id').isMongoId().withMessage('Please provide a valid Customer MongoDB ID'),
 ];
 
+// Bulk Validation Rules
+const validateBulkCreate = [
+  body('customers').isArray({ min: 1 }).withMessage('Customers must be a non-empty array'),
+  body('customers.*.name').trim().notEmpty().withMessage('Customer name is required in bulk creation'),
+  body('customers.*.email').trim().isEmail().withMessage('Please provide a valid email in bulk creation'),
+];
+
+const validateBulkUpdate = [
+  body().custom((value) => {
+    const hasIdsAndUpdates = value.ids && Array.isArray(value.ids) && value.updates;
+    const hasList = value.list && Array.isArray(value.list);
+    
+    if (!hasIdsAndUpdates && !hasList) {
+      throw new Error('Bulk update requires either {ids, updates} or {list}');
+    }
+    return true;
+  }),
+];
+
+const validateBulkDelete = [
+  body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array of MongoDB IDs'),
+  body('ids.*').isMongoId().withMessage('Invalid MongoDB ID in bulk deletion list'),
+];
+
 module.exports = {
   validateCreate,
   validateUpdate,
   validateId,
+  validateBulkCreate,
+  validateBulkUpdate,
+  validateBulkDelete,
 };
