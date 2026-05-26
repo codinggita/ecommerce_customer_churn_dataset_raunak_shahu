@@ -1,0 +1,71 @@
+const { body, param } = require('express-validator');
+
+const validateCreate = [
+  body('name').trim().notEmpty().withMessage('Customer name is required'),
+  body('email').trim().isEmail().withMessage('Please provide a valid customer email'),
+  body('age').isInt({ min: 0 }).withMessage('Age must be a positive integer'),
+  body('gender').trim().notEmpty().withMessage('Gender is required'),
+  body('country').trim().notEmpty().withMessage('Country is required'),
+  body('city').trim().notEmpty().withMessage('City is required'),
+  body('membershipYears').optional().isFloat({ min: 0 }).withMessage('Membership years must be a positive number'),
+  body('loginFrequency').optional().isFloat({ min: 0 }).withMessage('Login frequency must be a positive number'),
+  body('sessionDuration').optional().isFloat({ min: 0 }).withMessage('Session duration must be a positive number'),
+  body('pagesPerSession').optional().isFloat({ min: 0 }).withMessage('Pages per session must be a positive number'),
+  body('cartAbandonmentRate').optional().isFloat({ min: 0, max: 100 }).withMessage('Cart abandonment rate must be between 0 and 100'),
+  body('wishlistItems').optional().isInt({ min: 0 }).withMessage('Wishlist items must be a positive integer'),
+  body('purchases').optional().isFloat({ min: 0 }).withMessage('Purchases must be a positive number'),
+  body('averageOrderValue').optional().isFloat({ min: 0 }).withMessage('Average order value must be a positive number'),
+  body('daysSinceLastPurchase').optional().isFloat({ min: 0 }).withMessage('Days since last purchase must be a positive number'),
+  body('discountRate').optional().isFloat({ min: 0, max: 100 }).withMessage('Discount rate must be between 0 and 100'),
+  body('returnsRate').optional().isFloat({ min: 0, max: 100 }).withMessage('Returns rate must be between 0 and 100'),
+  body('emailOpenRate').optional().isFloat({ min: 0, max: 100 }).withMessage('Email open rate must be between 0 and 100'),
+  body('customerServiceCalls').optional().isInt({ min: 0 }).withMessage('Customer service calls must be a positive integer'),
+  body('productReviewsWritten').optional().isInt({ min: 0 }).withMessage('Product reviews written must be a positive integer'),
+  body('socialMediaEngagementScore').optional().isFloat({ min: 0 }).withMessage('Social media engagement score must be a positive number'),
+  body('mobileUsage').optional().isFloat({ min: 0 }).withMessage('Mobile app usage must be a positive number'),
+  body('paymentMethodDiversity').optional().isFloat({ min: 0 }).withMessage('Payment method diversity must be a positive number'),
+  body('lifetimeValue').optional().isFloat({ min: 0 }).withMessage('Lifetime value must be a positive number'),
+  body('creditBalance').optional().isFloat({ min: 0 }).withMessage('Credit balance must be a positive number'),
+  body('churned').optional().isInt({ min: 0, max: 1 }).withMessage('Churned status must be 0 or 1'),
+  body('signupQuarter').optional().trim().matches(/^Q[1-4]$/).withMessage('Signup quarter must be in format Q1, Q2, Q3, or Q4'),
+];
+
+const validateUpdate = [
+  body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
+  body('email').optional().trim().isEmail().withMessage('Please provide a valid email'),
+  body('age').optional().isInt({ min: 0 }).withMessage('Age must be a positive integer'),
+  body('gender').optional().trim().notEmpty().withMessage('Gender cannot be empty'),
+  body('country').optional().trim().notEmpty().withMessage('Country cannot be empty'),
+  body('city').optional().trim().notEmpty().withMessage('City cannot be empty'),
+  body('membershipYears').optional().isFloat({ min: 0 }).withMessage('Membership years must be a positive number'),
+  body('loginFrequency').optional().isFloat({ min: 0 }).withMessage('Login frequency must be a positive number'),
+  body('sessionDuration').optional().isFloat({ min: 0 }).withMessage('Session duration must be a positive number'),
+  body('pagesPerSession').optional().isFloat({ min: 0 }).withMessage('Pages per session must be a positive number'),
+  body('cartAbandonmentRate').optional().isFloat({ min: 0, max: 100 }).withMessage('Cart abandonment rate must be between 0 and 100'),
+  body('wishlistItems').optional().isInt({ min: 0 }).withMessage('Wishlist items must be a positive integer'),
+  body('purchases').optional().isFloat({ min: 0 }).withMessage('Purchases must be a positive number'),
+  body('averageOrderValue').optional().isFloat({ min: 0 }).withMessage('Average order value must be a positive number'),
+  body('daysSinceLastPurchase').optional().isFloat({ min: 0 }).withMessage('Days since last purchase must be a positive number'),
+  body('discountRate').optional().isFloat({ min: 0, max: 100 }).withMessage('Discount rate must be between 0 and 100'),
+  body('returnsRate').optional().isFloat({ min: 0, max: 100 }).withMessage('Returns rate must be between 0 and 100'),
+  body('emailOpenRate').optional().isFloat({ min: 0, max: 100 }).withMessage('Email open rate must be between 0 and 100'),
+  body('customerServiceCalls').optional().isInt({ min: 0 }).withMessage('Customer service calls must be a positive integer'),
+  body('productReviewsWritten').optional().isInt({ min: 0 }).withMessage('Product reviews written must be a positive integer'),
+  body('socialMediaEngagementScore').optional().isFloat({ min: 0 }).withMessage('Social media engagement score must be a positive number'),
+  body('mobileUsage').optional().isFloat({ min: 0 }).withMessage('Mobile app usage must be a positive number'),
+  body('paymentMethodDiversity').optional().isFloat({ min: 0 }).withMessage('Payment method diversity must be a positive number'),
+  body('lifetimeValue').optional().isFloat({ min: 0 }).withMessage('Lifetime value must be a positive number'),
+  body('creditBalance').optional().isFloat({ min: 0 }).withMessage('Credit balance must be a positive number'),
+  body('churned').optional().isInt({ min: 0, max: 1 }).withMessage('Churned status must be 0 or 1'),
+  body('signupQuarter').optional().trim().matches(/^Q[1-4]$/).withMessage('Signup quarter must be in format Q1, Q2, Q3, or Q4'),
+];
+
+const validateId = [
+  param('id').isMongoId().withMessage('Please provide a valid Customer MongoDB ID'),
+];
+
+module.exports = {
+  validateCreate,
+  validateUpdate,
+  validateId,
+};

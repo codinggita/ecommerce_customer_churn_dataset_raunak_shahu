@@ -4,6 +4,10 @@ const ApiResponse = require('../utils/apiResponse');
 const constants = require('../config/constants');
 const upload = require('../middlewares/uploadMiddleware');
 const customerController = require('../controllers/customerController');
+const { validateCreate, validateUpdate, validateId } = require('../validations/customerValidation');
+const validate = require('../middlewares/validationMiddleware');
+
+// --- SYSTEM & UTILITY ROUTES (Place before parameter routes) ---
 
 /**
  * @route   GET /api/v1/customers/system/health
@@ -46,15 +50,60 @@ router.get('/system/config', (req, res) => {
 /**
  * @route   POST /api/v1/customers/import-json
  * @desc    Import/upload customer records from a JSON file
- * @access  Public (for development/seeding)
+ * @access  Public
  */
 router.post('/import-json', upload.single('file'), customerController.importJson);
 
 /**
  * @route   POST /api/v1/customers/cache/clear
  * @desc    Clear API query cache
- * @access  Public (for now)
+ * @access  Public
  */
 router.post('/cache/clear', customerController.clearCache);
+
+
+// --- CORE CRUD ROUTES ---
+
+/**
+ * @route   GET /api/v1/customers
+ * @desc    Fetch multiple customer records (handles filtering, sorting, pagination)
+ * @access  Public
+ */
+router.get('/', customerController.getCustomers);
+
+/**
+ * @route   POST /api/v1/customers
+ * @desc    Add a new customer record
+ * @access  Public
+ */
+router.post('/', validateCreate, validate, customerController.createCustomer);
+
+/**
+ * @route   GET /api/v1/customers/:id
+ * @desc    Fetch single customer record by ID
+ * @access  Public
+ */
+router.get('/:id', validateId, validate, customerController.getCustomerById);
+
+/**
+ * @route   PUT /api/v1/customers/:id
+ * @desc    Replace complete customer record (PUT)
+ * @access  Public
+ */
+router.put('/:id', validateId, validate, validateCreate, validate, customerController.replaceCustomer);
+
+/**
+ * @route   PATCH /api/v1/customers/:id
+ * @desc    Update specific customer fields (PATCH)
+ * @access  Public
+ */
+router.patch('/:id', validateId, validate, validateUpdate, validate, customerController.updateCustomer);
+
+/**
+ * @route   DELETE /api/v1/customers/:id
+ * @desc    Remove customer record from database (Soft delete)
+ * @access  Public
+ */
+router.delete('/:id', validateId, validate, customerController.deleteCustomer);
 
 module.exports = router;
