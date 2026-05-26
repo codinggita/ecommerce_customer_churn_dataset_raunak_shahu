@@ -74,10 +74,89 @@ const getAverageOrderValue = async (req, res, next) => {
   }
 };
 
+/**
+ * Fetch customer with the highest purchases
+ * @route GET /api/v1/stats/customers/highest-purchases
+ */
+const getHighestPurchasesCustomer = async (req, res, next) => {
+  try {
+    const customer = await statsService.getHighestPurchasesCustomer();
+    if (!customer) {
+      return ApiResponse.error(res, 'No customers found', null, 404);
+    }
+    return ApiResponse.success(res, 'Customer with highest purchases fetched successfully', customer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customer with the highest lifetime value
+ * @route GET /api/v1/stats/customers/highest-lifetime
+ */
+const getHighestLifetimeCustomer = async (req, res, next) => {
+  try {
+    const customer = await statsService.getHighestLifetimeCustomer();
+    if (!customer) {
+      return ApiResponse.error(res, 'No customers found', null, 404);
+    }
+    return ApiResponse.success(res, 'Customer with highest lifetime value fetched successfully', customer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customer with the highest credit balance
+ * @route GET /api/v1/stats/customers/highest-credit
+ */
+const getHighestCreditCustomer = async (req, res, next) => {
+  try {
+    const customer = await statsService.getHighestCreditCustomer();
+    if (!customer) {
+      return ApiResponse.error(res, 'No customers found', null, 404);
+    }
+    return ApiResponse.success(res, 'Customer with highest credit balance fetched successfully', customer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customer counts grouped by country
+ * @route GET /api/v1/stats/customers/country-count
+ */
+const getCountryCounts = async (req, res, next) => {
+  try {
+    const counts = await statsService.getCountryCounts();
+    return ApiResponse.success(res, 'Country customer counts fetched successfully', counts);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customer counts grouped by city
+ * @route GET /api/v1/stats/customers/city-count
+ */
+const getCityCounts = async (req, res, next) => {
+  try {
+    const counts = await statsService.getCityCounts();
+    return ApiResponse.success(res, 'City customer counts fetched successfully', counts);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getCustomerCount,
   getAverageAge,
   getAverageLifetimeValue,
   getAverageCreditBalance,
   getAverageOrderValue,
+  getHighestPurchasesCustomer,
+  getHighestLifetimeCustomer,
+  getHighestCreditCustomer,
+  getCountryCounts,
+  getCityCounts,
 };
