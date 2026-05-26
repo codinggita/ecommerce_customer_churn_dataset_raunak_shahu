@@ -127,6 +127,222 @@ router.get('/high-credit', customerController.getHighCreditCustomers);
  */
 router.get('/high-engagement', customerController.getHighEngagementCustomers);
 
+/**
+ * @route   GET /api/v1/customers/high-mobile-usage
+ * @desc    Fetch high mobile app users
+ * @access  Public
+ */
+router.get('/high-mobile-usage', customerController.getHighMobileUsageCustomers);
+
+/**
+ * @route   GET /api/v1/customers/high-discount-users
+ * @desc    Fetch high discount rate users
+ * @access  Public
+ */
+router.get('/high-discount-users', customerController.getHighDiscountCustomers);
+
+/**
+ * @route   GET /api/v1/customers/recent-buyers
+ * @desc    Fetch recently active buyers
+ * @access  Public
+ */
+router.get('/recent-buyers', customerController.getRecentBuyers);
+
+/**
+ * @route   GET /api/v1/customers/inactive
+ * @desc    Fetch inactive buyers
+ * @access  Public
+ */
+router.get('/inactive', customerController.getInactiveCustomers);
+
+/**
+ * @route   GET /api/v1/customers/top-reviewers
+ * @desc    Fetch customers writing most reviews
+ * @access  Public
+ */
+router.get('/top-reviewers', customerController.getTopReviewers);
+
+/**
+ * @route   GET /api/v1/customers/high-cart-abandonment
+ * @desc    Fetch high cart abandoners
+ * @access  Public
+ */
+router.get('/high-cart-abandonment', customerController.getHighCartAbandonmentCustomers);
+
+/**
+ * @route   GET /api/v1/customers/frequent-logins
+ * @desc    Fetch frequent logins
+ * @access  Public
+ */
+router.get('/frequent-logins', customerController.getFrequentLoginsCustomers);
+
+/**
+ * @route   GET /api/v1/customers/loyal
+ * @desc    Fetch loyal customers by membership years
+ * @access  Public
+ */
+router.get('/loyal', customerController.getLoyalCustomers);
+
+/**
+ * @route   GET /api/v1/customers/premium
+ * @desc    Fetch premium customer analytics status
+ * @access  Public
+ */
+router.get('/premium', customerController.getPremiumCustomers);
+
+/**
+ * @route   GET /api/v1/customers/recent
+ * @desc    Fetch recently active customers
+ * @access  Public
+ */
+router.get('/recent', customerController.getRecentCustomers);
+
+// --- SPECIFIC SORTING ROUTES ---
+
+/**
+ * @route   GET /api/v1/customers/sort/age-desc
+ * @desc    Sort oldest first
+ * @access  Public
+ */
+router.get('/sort/age-desc', customerController.getCustomersSortedByAgeDesc);
+
+/**
+ * @route   GET /api/v1/customers/sort/purchases-desc
+ * @desc    Sort highest purchasers first
+ * @access  Public
+ */
+router.get('/sort/purchases-desc', customerController.getCustomersSortedByPurchasesDesc);
+
+/**
+ * @route   GET /api/v1/customers/sort/lifetime-desc
+ * @desc    Sort highest lifetime value first
+ * @access  Public
+ */
+router.get('/sort/lifetime-desc', customerController.getCustomersSortedByLifetimeDesc);
+
+/**
+ * @route   GET /api/v1/customers/sort/login-desc
+ * @desc    Sort most active first
+ * @access  Public
+ */
+router.get('/sort/login-desc', customerController.getCustomersSortedByLoginDesc);
+
+/**
+ * @route   GET /api/v1/customers/sort/credit-desc
+ * @desc    Sort highest credit balance first
+ * @access  Public
+ */
+router.get('/sort/credit-desc', customerController.getCustomersSortedByCreditDesc);
+
+// --- SPECIFIC FILTERING ROUTES - PART 1 ---
+
+/**
+ * @route   GET /api/v1/customers/filter/high-purchases
+ * @desc    Fetch customers with high purchases
+ * @access  Public
+ */
+router.get('/filter/high-purchases', customerController.getFilteredHighPurchases);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-lifetime
+ * @desc    Fetch customers with high lifetime value
+ * @access  Public
+ */
+router.get('/filter/high-lifetime', customerController.getFilteredHighLifetime);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-credit
+ * @desc    Fetch customers with high credit balance
+ * @access  Public
+ */
+router.get('/filter/high-credit', customerController.getFilteredHighCredit);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-login
+ * @desc    Fetch customers with high login frequency
+ * @access  Public
+ */
+router.get('/filter/high-login', customerController.getFilteredHighLogin);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-mobile
+ * @desc    Fetch customers with high mobile usage
+ * @access  Public
+ */
+router.get('/filter/high-mobile', customerController.getFilteredHighMobile);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-discount
+ * @desc    Fetch customers with high discount rate
+ * @access  Public
+ */
+router.get('/filter/high-discount', customerController.getFilteredHighDiscount);
+
+// --- SPECIFIC FILTERING ROUTES - PART 2 ---
+
+/**
+ * @route   GET /api/v1/customers/filter/high-cart-abandonment
+ * @desc    Fetch customers with high cart abandonment rate
+ * @access  Public
+ */
+router.get('/filter/high-cart-abandonment', customerController.getFilteredHighCartAbandonment);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-engagement
+ * @desc    Fetch customers with high engagement
+ * @access  Public
+ */
+router.get('/filter/high-engagement', customerController.getFilteredHighEngagement);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-reviews
+ * @desc    Fetch customers with high review counts
+ * @access  Public
+ */
+router.get('/filter/high-reviews', customerController.getFilteredHighReviews);
+
+/**
+ * @route   GET /api/v1/customers/filter/churned
+ * @desc    Fetch churned customers
+ * @access  Public
+ */
+router.get('/filter/churned', customerController.getFilteredChurned);
+
+/**
+ * @route   GET /api/v1/customers/filter/active
+ * @desc    Fetch active customers
+ * @access  Public
+ */
+router.get('/filter/active', customerController.getFilteredActive);
+
+/**
+ * @route   GET /api/v1/customers/filter/low-session
+ * @desc    Fetch customers with low session duration
+ * @access  Public
+ */
+router.get('/filter/low-session', customerController.getFilteredLowSession);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-session
+ * @desc    Fetch customers with high session duration
+ * @access  Public
+ */
+router.get('/filter/high-session', customerController.getFilteredHighSession);
+
+/**
+ * @route   GET /api/v1/customers/filter/high-order-value
+ * @desc    Fetch customers with high order values
+ * @access  Public
+ */
+router.get('/filter/high-order-value', customerController.getFilteredHighOrderValue);
+
+/**
+ * @route   GET /api/v1/customers/filter/loyal
+ * @desc    Fetch loyal customers
+ * @access  Public
+ */
+router.get('/filter/loyal', customerController.getFilteredLoyal);
+
 
 // --- DEMOGRAPHIC SPECIFIC ROUTING ---
 
