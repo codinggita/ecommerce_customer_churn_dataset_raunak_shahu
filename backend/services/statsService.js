@@ -51,10 +51,58 @@ const getAverageOrderValue = async () => {
   return result.length > 0 ? result[0].averageOov : 0;
 };
 
+/**
+ * Get customer with the highest purchases
+ */
+const getHighestPurchasesCustomer = async () => {
+  return await Customer.findOne({ isDeleted: { $ne: true } }).sort({ purchases: -1 });
+};
+
+/**
+ * Get customer with the highest lifetime value
+ */
+const getHighestLifetimeCustomer = async () => {
+  return await Customer.findOne({ isDeleted: { $ne: true } }).sort({ lifetimeValue: -1 });
+};
+
+/**
+ * Get customer with the highest credit balance
+ */
+const getHighestCreditCustomer = async () => {
+  return await Customer.findOne({ isDeleted: { $ne: true } }).sort({ creditBalance: -1 });
+};
+
+/**
+ * Get customer counts grouped by country
+ */
+const getCountryCounts = async () => {
+  return await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    { $group: { _id: '$country', count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+  ]);
+};
+
+/**
+ * Get customer counts grouped by city
+ */
+const getCityCounts = async () => {
+  return await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    { $group: { _id: '$city', count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+  ]);
+};
+
 module.exports = {
   getCustomerCount,
   getAverageAge,
   getAverageLifetimeValue,
   getAverageCreditBalance,
   getAverageOrderValue,
+  getHighestPurchasesCustomer,
+  getHighestLifetimeCustomer,
+  getHighestCreditCustomer,
+  getCountryCounts,
+  getCityCounts,
 };

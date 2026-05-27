@@ -37,4 +37,39 @@ router.get('/customers/average-credit', statsController.getAverageCreditBalance)
  */
 router.get('/customers/average-order-value', statsController.getAverageOrderValue);
 
+/**
+ * @route   GET /api/v1/stats/customers/highest-purchases
+ * @desc    Fetch customer with highest purchases
+ * @access  Public
+ */
+router.get('/customers/highest-purchases', statsController.getHighestPurchasesCustomer);
+
+/**
+ * @route   GET /api/v1/stats/customers/highest-lifetime
+ * @desc    Fetch customer with highest lifetime value
+ * @access  Public
+ */
+router.get('/customers/highest-lifetime', statsController.getHighestLifetimeCustomer);
+
+/**
+ * @route   GET /api/v1/stats/customers/highest-credit
+ * @desc    Fetch customer with highest credit balance
+ * @access  Public
+ */
+router.get('/customers/highest-credit', statsController.getHighestCreditCustomer);
+
+/**
+ * @route   GET /api/v1/stats/customers/country-count
+ * @desc    Fetch customer counts grouped by country
+ * @access  Public
+ */
+router.get('/customers/country-count', statsController.getCountryCounts);
+
+/**
+ * @route   GET /api/v1/stats/customers/city-count
+ * @desc    Fetch customer counts grouped by city
+ * @access  Public
+ */
+router.get('/customers/city-count', statsController.getCityCounts);
+
 module.exports = router;
