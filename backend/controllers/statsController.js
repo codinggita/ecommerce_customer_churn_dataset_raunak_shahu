@@ -148,6 +148,73 @@ const getCityCounts = async (req, res, next) => {
   }
 };
 
+/**
+ * Fetch customer counts grouped by gender
+ * @route GET /api/v1/stats/customers/gender-count
+ */
+const getGenderCounts = async (req, res, next) => {
+  try {
+    const counts = await statsService.getGenderCounts();
+    return ApiResponse.success(res, 'Gender customer counts fetched successfully', counts);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customer counts grouped by churn status
+ * @route GET /api/v1/stats/customers/churn-count
+ */
+const getChurnCounts = async (req, res, next) => {
+  try {
+    const counts = await statsService.getChurnCounts();
+    return ApiResponse.success(res, 'Churn status customer counts fetched successfully', counts);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch customer counts grouped by signup quarter
+ * @route GET /api/v1/stats/customers/signup-quarter-count
+ */
+const getSignupQuarterCounts = async (req, res, next) => {
+  try {
+    const counts = await statsService.getSignupQuarterCounts();
+    return ApiResponse.success(res, 'Signup quarter customer counts fetched successfully', counts);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch total review count across all active customers
+ * @route GET /api/v1/stats/customers/review-count
+ */
+const getTotalReviewCount = async (req, res, next) => {
+  try {
+    const count = await statsService.getTotalReviewCount();
+    return ApiResponse.success(res, 'Total customer review count fetched successfully', { count });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Fetch average mobile usage metric
+ * @route GET /api/v1/stats/customers/mobile-usage
+ */
+const getAverageMobileUsage = async (req, res, next) => {
+  try {
+    const averageMobileUsage = await statsService.getAverageMobileUsage();
+    return ApiResponse.success(res, 'Average customer mobile usage fetched successfully', { 
+      averageMobileUsage: Math.round(averageMobileUsage * 100) / 100 
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getCustomerCount,
   getAverageAge,
@@ -159,4 +226,9 @@ module.exports = {
   getHighestCreditCustomer,
   getCountryCounts,
   getCityCounts,
+  getGenderCounts,
+  getChurnCounts,
+  getSignupQuarterCounts,
+  getTotalReviewCount,
+  getAverageMobileUsage,
 };

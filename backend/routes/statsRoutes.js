@@ -72,4 +72,39 @@ router.get('/customers/country-count', statsController.getCountryCounts);
  */
 router.get('/customers/city-count', statsController.getCityCounts);
 
+/**
+ * @route   GET /api/v1/stats/customers/gender-count
+ * @desc    Fetch customer counts grouped by gender
+ * @access  Public
+ */
+router.get('/customers/gender-count', statsController.getGenderCounts);
+
+/**
+ * @route   GET /api/v1/stats/customers/churn-count
+ * @desc    Fetch customer counts grouped by churn status
+ * @access  Public
+ */
+router.get('/customers/churn-count', statsController.getChurnCounts);
+
+/**
+ * @route   GET /api/v1/stats/customers/signup-quarter-count
+ * @desc    Fetch customer counts grouped by signup quarter
+ * @access  Public
+ */
+router.get('/customers/signup-quarter-count', statsController.getSignupQuarterCounts);
+
+/**
+ * @route   GET /api/v1/stats/customers/review-count
+ * @desc    Fetch total customer reviews written count
+ * @access  Public
+ */
+router.get('/customers/review-count', statsController.getTotalReviewCount);
+
+/**
+ * @route   GET /api/v1/stats/customers/mobile-usage
+ * @desc    Fetch average mobile usage statistics
+ * @access  Public
+ */
+router.get('/customers/mobile-usage', statsController.getAverageMobileUsage);
+
 module.exports = router;
