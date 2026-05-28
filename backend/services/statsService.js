@@ -94,6 +94,61 @@ const getCityCounts = async () => {
   ]);
 };
 
+/**
+ * Get customer counts grouped by gender
+ */
+const getGenderCounts = async () => {
+  return await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    { $group: { _id: '$gender', count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+  ]);
+};
+
+/**
+ * Get customer counts grouped by churn status
+ */
+const getChurnCounts = async () => {
+  return await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    { $group: { _id: '$churned', count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+  ]);
+};
+
+/**
+ * Get customer counts grouped by signup quarter
+ */
+const getSignupQuarterCounts = async () => {
+  return await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    { $group: { _id: '$signupQuarter', count: { $sum: 1 } } },
+    { $sort: { _id: 1 } }
+  ]);
+};
+
+/**
+ * Get total reviews written by all active customers
+ */
+const getTotalReviewCount = async () => {
+  const result = await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    { $group: { _id: null, totalReviews: { $sum: '$productReviewsWritten' } } }
+  ]);
+  return result.length > 0 ? result[0].totalReviews : 0;
+};
+
+/**
+ * Get average mobile usage metrics
+ */
+const getAverageMobileUsage = async () => {
+  const result = await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    { $group: { _id: null, averageMobileUsage: { $avg: '$mobileUsage' } } }
+  ]);
+  return result.length > 0 ? result[0].averageMobileUsage : 0;
+};
+
 module.exports = {
   getCustomerCount,
   getAverageAge,
@@ -105,4 +160,9 @@ module.exports = {
   getHighestCreditCustomer,
   getCountryCounts,
   getCityCounts,
+  getGenderCounts,
+  getChurnCounts,
+  getSignupQuarterCounts,
+  getTotalReviewCount,
+  getAverageMobileUsage,
 };
