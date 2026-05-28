@@ -72,4 +72,39 @@ router.get('/customers/retention', analyticsController.getRetentionAnalysis);
  */
 router.get('/customers/session-analysis', analyticsController.getSessionAnalysis);
 
+/**
+ * @route   GET /api/v1/analytics/customers/purchase-analysis
+ * @desc    Fetch purchase analytics and brackets breakdown
+ * @access  Public
+ */
+router.get('/customers/purchase-analysis', analyticsController.getPurchaseAnalysis);
+
+/**
+ * @route   GET /api/v1/analytics/customers/country-analysis
+ * @desc    Fetch country aggregated analytics
+ * @access  Public
+ */
+router.get('/customers/country-analysis', analyticsController.getCountryAnalysis);
+
+/**
+ * @route   GET /api/v1/analytics/customers/city-analysis
+ * @desc    Fetch city aggregated analytics
+ * @access  Public
+ */
+router.get('/customers/city-analysis', analyticsController.getCityAnalysis);
+
+/**
+ * @route   GET /api/v1/analytics/customers/signup-analysis
+ * @desc    Fetch signup quarter trend analysis
+ * @access  Public
+ */
+router.get('/customers/signup-analysis', analyticsController.getSignupAnalysis);
+
+/**
+ * @route   GET /api/v1/analytics/customers/payment-analysis
+ * @desc    Fetch payment method diversity correlation analysis
+ * @access  Public
+ */
+router.get('/customers/payment-analysis', analyticsController.getPaymentAnalysis);
+
 module.exports = router;

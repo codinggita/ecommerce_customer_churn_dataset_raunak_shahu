@@ -148,6 +148,164 @@ const getSessionAnalysis = async () => {
   ]);
 };
 
+/**
+ * Purchase analysis (averageOrderValue breakdown)
+ */
+const getPurchaseAnalysis = async () => {
+  return await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    {
+      $project: {
+        aovTier: {
+          $cond: [
+            { $lt: ['$averageOrderValue', 100] },
+            'Low (< 100)',
+            {
+              $cond: [
+                { $lt: ['$averageOrderValue', 200] },
+                'Medium (100-200)',
+                'High (>= 200)'
+              ]
+            }
+          ]
+        },
+        purchases: 1,
+        lifetimeValue: 1,
+        churned: 1
+      }
+    },
+    {
+      $group: {
+        _id: '$aovTier',
+        count: { $sum: 1 },
+        averagePurchases: { $avg: '$purchases' },
+        averageLifetimeValue: { $avg: '$lifetimeValue' },
+        churnRate: { $avg: { $cond: [{ $eq: ['$churned', 1] }, 1, 0] } }
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        count: 1,
+        averagePurchases: 1,
+        averageLifetimeValue: 1,
+        churnRate: { $multiply: ['$churnRate', 100] }
+      }
+    },
+    { $sort: { _id: 1 } }
+  ]);
+};
+
+/**
+ * Country analysis (demographic purchase & churn aggregates)
+ */
+const getCountryAnalysis = async () => {
+  return await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    {
+      $group: {
+        _id: '$country',
+        count: { $sum: 1 },
+        averageAge: { $avg: '$age' },
+        averageLifetimeValue: { $avg: '$lifetimeValue' },
+        averagePurchases: { $avg: '$purchases' },
+        averageCustomerServiceCalls: { $avg: '$customerServiceCalls' },
+        churnRate: { $avg: { $cond: [{ $eq: ['$churned', 1] }, 1, 0] } }
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        count: 1,
+        averageAge: 1,
+        averageLifetimeValue: 1,
+        averagePurchases: 1,
+        averageCustomerServiceCalls: 1,
+        churnRate: { $multiply: ['$churnRate', 100] }
+      }
+    },
+    { $sort: { count: -1 } }
+  ]);
+};
+
+/**
+ * City analysis (demographic purchase & churn aggregates)
+ */
+const getCityAnalysis = async () => {
+  return await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    {
+      $group: {
+        _id: '$city',
+        count: { $sum: 1 },
+        averageLifetimeValue: { $avg: '$lifetimeValue' },
+        averagePurchases: { $avg: '$purchases' },
+        averageOrderValue: { $avg: '$averageOrderValue' },
+        churnRate: { $avg: { $cond: [{ $eq: ['$churned', 1] }, 1, 0] } }
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        count: 1,
+        averageLifetimeValue: 1,
+        averagePurchases: 1,
+        averageOrderValue: 1,
+        churnRate: { $multiply: ['$churnRate', 100] }
+      }
+    },
+    { $sort: { count: -1 } }
+  ]);
+};
+
+/**
+ * Signup trend analysis
+ */
+const getSignupAnalysis = async () => {
+  return await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    {
+      $group: {
+        _id: '$signupQuarter',
+        count: { $sum: 1 },
+        totalLifetimeValue: { $sum: '$lifetimeValue' },
+        totalPurchases: { $sum: '$purchases' },
+        averageCreditBalance: { $avg: '$creditBalance' },
+        averageMembershipYears: { $avg: '$membershipYears' }
+      }
+    },
+    { $sort: { _id: 1 } }
+  ]);
+};
+
+/**
+ * Payment method diversity correlation analysis
+ */
+const getPaymentAnalysis = async () => {
+  return await Customer.aggregate([
+    { $match: { isDeleted: { $ne: true } } },
+    {
+      $group: {
+        _id: '$paymentMethodDiversity',
+        count: { $sum: 1 },
+        averageLifetimeValue: { $avg: '$lifetimeValue' },
+        averagePurchases: { $avg: '$purchases' },
+        churnRate: { $avg: { $cond: [{ $eq: ['$churned', 1] }, 1, 0] } }
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        count: 1,
+        averageLifetimeValue: 1,
+        averagePurchases: 1,
+        churnRate: { $multiply: ['$churnRate', 100] }
+      }
+    },
+    { $sort: { _id: 1 } }
+  ]);
+};
+
 module.exports = {
   getTopBuyers,
   getTopLifetimeCustomers,
@@ -159,4 +317,9 @@ module.exports = {
   getChurnAnalysis,
   getRetentionAnalysis,
   getSessionAnalysis,
+  getPurchaseAnalysis,
+  getCountryAnalysis,
+  getCityAnalysis,
+  getSignupAnalysis,
+  getPaymentAnalysis,
 };

@@ -138,6 +138,71 @@ const getSessionAnalysis = async (req, res, next) => {
   }
 };
 
+/**
+ * Retrieve purchase analysis (AOV breakdown)
+ * @route GET /api/v1/analytics/customers/purchase-analysis
+ */
+const getPurchaseAnalysis = async (req, res, next) => {
+  try {
+    const data = await analyticsService.getPurchaseAnalysis();
+    return ApiResponse.success(res, 'Purchase analysis metrics retrieved successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retrieve country aggregated analytics
+ * @route GET /api/v1/analytics/customers/country-analysis
+ */
+const getCountryAnalysis = async (req, res, next) => {
+  try {
+    const data = await analyticsService.getCountryAnalysis();
+    return ApiResponse.success(res, 'Country analysis metrics retrieved successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retrieve city aggregated analytics
+ * @route GET /api/v1/analytics/customers/city-analysis
+ */
+const getCityAnalysis = async (req, res, next) => {
+  try {
+    const data = await analyticsService.getCityAnalysis();
+    return ApiResponse.success(res, 'City analysis metrics retrieved successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retrieve signup trend analytics
+ * @route GET /api/v1/analytics/customers/signup-analysis
+ */
+const getSignupAnalysis = async (req, res, next) => {
+  try {
+    const data = await analyticsService.getSignupAnalysis();
+    return ApiResponse.success(res, 'Signup analysis metrics retrieved successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retrieve payment diversity correlation analytics
+ * @route GET /api/v1/analytics/customers/payment-analysis
+ */
+const getPaymentAnalysis = async (req, res, next) => {
+  try {
+    const data = await analyticsService.getPaymentAnalysis();
+    return ApiResponse.success(res, 'Payment analysis metrics retrieved successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getTopBuyers,
   getTopLifetimeCustomers,
@@ -149,4 +214,9 @@ module.exports = {
   getChurnAnalysis,
   getRetentionAnalysis,
   getSessionAnalysis,
+  getPurchaseAnalysis,
+  getCountryAnalysis,
+  getCityAnalysis,
+  getSignupAnalysis,
+  getPaymentAnalysis,
 };
