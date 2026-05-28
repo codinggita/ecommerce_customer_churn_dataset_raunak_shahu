@@ -82,4 +82,32 @@ router.post('/send-otp', authValidation.validateSendOtp, validate, authControlle
  */
 router.post('/verify-otp', authValidation.validateVerifyOtp, validate, authController.verifyOtp);
 
+/**
+ * @route   POST /api/v1/auth/verify-email
+ * @desc    Verify email using token
+ * @access  Public
+ */
+router.post('/verify-email', authValidation.validateVerifyEmail, validate, authController.verifyEmail);
+
+/**
+ * @route   POST /api/v1/auth/resend-verification
+ * @desc    Resend email verification token
+ * @access  Public
+ */
+router.post('/resend-verification', authValidation.validateResendVerification, validate, authController.resendVerification);
+
+/**
+ * @route   GET /api/v1/auth/session
+ * @desc    Get current active session details
+ * @access  Private
+ */
+router.get('/session', protect, authController.getSession);
+
+/**
+ * @route   DELETE /api/v1/auth/session
+ * @desc    Clear active session
+ * @access  Private
+ */
+router.delete('/session', protect, authController.deleteSession);
+
 module.exports = router;

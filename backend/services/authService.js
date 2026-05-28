@@ -212,6 +212,74 @@ const verifyOtp = async (email, otp) => {
   return user;
 };
 
+/**
+ * Verify email using token
+ */
+const verifyEmail = async (token) => {
+  const user = await User.findOne({
+    verificationToken: token,
+    verificationTokenExpire: { $gt: Date.now() },
+    isDeleted: { $ne: true }
+  });
+
+  if (!user) {
+    const error = new Error('Invalid or expired email verification token');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  user.isEmailVerified = true;
+  user.verificationToken = undefined;
+  user.verificationTokenExpire = undefined;
+
+  await user.save();
+  return user;
+};
+
+/**
+ * Resend verification email token
+ */
+const resendVerificationToken = async (email) => {
+  const user = await User.findOne({ email, isDeleted: { $ne: true } });
+  if (!user) {
+    const error = new Error('User not found with this email');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (user.isEmailVerified) {
+    const error = new Error('Email is already verified');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Generate secure token
+  const token = crypto.randomBytes(20).toString('hex');
+
+  user.verificationToken = token;
+  user.verificationTokenExpire = Date.now() + 86400000; // 24 hours
+
+  await user.save();
+  return token;
+};
+
+/**
+ * Verify a JWT token
+ */
+const verifyJwtToken = async (token) => {
+  const jwt = require('jsonwebtoken');
+  const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallbacksecret');
+  
+  const user = await User.findById(decoded.id);
+  if (!user || user.isDeleted) {
+    const error = new Error('User not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return { decoded, user };
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -222,4 +290,7 @@ module.exports = {
   changePassword,
   sendOtp,
   verifyOtp,
+  verifyEmail,
+  resendVerificationToken,
+  verifyJwtToken,
 };
