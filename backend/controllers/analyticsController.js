@@ -71,10 +71,82 @@ const getTopMobileUsers = async (req, res, next) => {
   }
 };
 
+/**
+ * Retrieve top discount rate users
+ * @route GET /api/v1/analytics/customers/top-discount-users
+ */
+const getTopDiscountUsers = async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const data = await analyticsService.getTopDiscountUsers(limit);
+    return ApiResponse.success(res, 'Top discount rate users retrieved successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retrieve top reviewers by productReviewsWritten
+ * @route GET /api/v1/analytics/customers/top-reviewers
+ */
+const getTopReviewers = async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit, 10) || 10;
+    const data = await analyticsService.getTopReviewers(limit);
+    return ApiResponse.success(res, 'Top reviewer users retrieved successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retrieve churn analysis aggregated metrics
+ * @route GET /api/v1/analytics/customers/churn-analysis
+ */
+const getChurnAnalysis = async (req, res, next) => {
+  try {
+    const data = await analyticsService.getChurnAnalysis();
+    return ApiResponse.success(res, 'Churn analysis metrics retrieved successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retrieve retention analysis metrics
+ * @route GET /api/v1/analytics/customers/retention
+ */
+const getRetentionAnalysis = async (req, res, next) => {
+  try {
+    const data = await analyticsService.getRetentionAnalysis();
+    return ApiResponse.success(res, 'Retention analysis metrics retrieved successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retrieve session analysis metrics
+ * @route GET /api/v1/analytics/customers/session-analysis
+ */
+const getSessionAnalysis = async (req, res, next) => {
+  try {
+    const data = await analyticsService.getSessionAnalysis();
+    return ApiResponse.success(res, 'Session analysis metrics retrieved successfully', data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getTopBuyers,
   getTopLifetimeCustomers,
   getTopCreditCustomers,
   getTopEngagement,
   getTopMobileUsers,
+  getTopDiscountUsers,
+  getTopReviewers,
+  getChurnAnalysis,
+  getRetentionAnalysis,
+  getSessionAnalysis,
 };

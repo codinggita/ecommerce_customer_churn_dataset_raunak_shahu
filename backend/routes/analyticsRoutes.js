@@ -37,4 +37,39 @@ router.get('/customers/top-engagement', analyticsController.getTopEngagement);
  */
 router.get('/customers/top-mobile-users', analyticsController.getTopMobileUsers);
 
+/**
+ * @route   GET /api/v1/analytics/customers/top-discount-users
+ * @desc    Fetch top customers by discount usage rate
+ * @access  Public
+ */
+router.get('/customers/top-discount-users', analyticsController.getTopDiscountUsers);
+
+/**
+ * @route   GET /api/v1/analytics/customers/top-reviewers
+ * @desc    Fetch top customer reviewers by reviews count
+ * @access  Public
+ */
+router.get('/customers/top-reviewers', analyticsController.getTopReviewers);
+
+/**
+ * @route   GET /api/v1/analytics/customers/churn-analysis
+ * @desc    Fetch aggregated metrics for churned vs active customers
+ * @access  Public
+ */
+router.get('/customers/churn-analysis', analyticsController.getChurnAnalysis);
+
+/**
+ * @route   GET /api/v1/analytics/customers/retention
+ * @desc    Fetch cohort retention statistics grouped by signup quarter
+ * @access  Public
+ */
+router.get('/customers/retention', analyticsController.getRetentionAnalysis);
+
+/**
+ * @route   GET /api/v1/analytics/customers/session-analysis
+ * @desc    Fetch average session metrics grouped by membership years
+ * @access  Public
+ */
+router.get('/customers/session-analysis', analyticsController.getSessionAnalysis);
+
 module.exports = router;
