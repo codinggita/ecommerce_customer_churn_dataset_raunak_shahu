@@ -7,6 +7,7 @@ const middlewareRoutes = require('./middlewareRoutes');
 const searchRoutes = require('./searchRoutes');
 const statsRoutes = require('./statsRoutes');
 const analyticsRoutes = require('./analyticsRoutes');
+const authRoutes = require('./authRoutes');
 
 
 // Mount routes to API namespace
@@ -15,6 +16,6 @@ router.use('/middleware', middlewareRoutes);
 router.use('/search', searchRoutes);
 router.use('/stats', statsRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/auth', authRoutes);
 
 module.exports = router;
-
