@@ -91,6 +91,76 @@ const deleteProfile = async (req, res, next) => {
   }
 };
 
+/**
+ * Forgot password (request reset link/token)
+ * @route POST /api/v1/auth/forgot-password
+ */
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const token = await authService.forgotPassword(email);
+    return ApiResponse.success(res, 'Password reset token generated successfully', { token });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Reset password using token
+ * @route POST /api/v1/auth/reset-password
+ */
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, newPassword } = req.body;
+    await authService.resetPassword(token, newPassword);
+    return ApiResponse.success(res, 'Password reset successfully', null);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Change password
+ * @route POST /api/v1/auth/change-password
+ */
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    await authService.changePassword(req.user._id, currentPassword, newPassword);
+    return ApiResponse.success(res, 'Password changed successfully', null);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Send OTP to user email
+ * @route POST /api/v1/auth/send-otp
+ */
+const sendOtp = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const otp = await authService.sendOtp(email);
+    return ApiResponse.success(res, 'OTP sent successfully', { otp });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Verify OTP
+ * @route POST /api/v1/auth/verify-otp
+ */
+const verifyOtp = async (req, res, next) => {
+  try {
+    const { email, otp } = req.body;
+    await authService.verifyOtp(email, otp);
+    return ApiResponse.success(res, 'OTP verified successfully. Email marked as verified.', null);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -98,4 +168,9 @@ module.exports = {
   getProfile,
   updateProfile,
   deleteProfile,
+  forgotPassword,
+  resetPassword,
+  changePassword,
+  sendOtp,
+  verifyOtp,
 };

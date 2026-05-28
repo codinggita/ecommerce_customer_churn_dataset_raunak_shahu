@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { User } = require('../models');
 
 /**
@@ -87,9 +88,138 @@ const deleteUserProfile = async (userId) => {
   );
 };
 
+/**
+ * Generate password reset token and save to DB
+ */
+const forgotPassword = async (email) => {
+  const user = await User.findOne({ email, isDeleted: { $ne: true } });
+  if (!user) {
+    const error = new Error('User not found with this email');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Generate token
+  const resetToken = crypto.randomBytes(20).toString('hex');
+
+  // Set token & expiry
+  user.resetPasswordToken = resetToken;
+  user.resetPasswordExpire = Date.now() + 3600000; // 1 hour
+
+  await user.save();
+
+  return resetToken;
+};
+
+/**
+ * Reset password using token
+ */
+const resetPassword = async (token, newPassword) => {
+  const user = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpire: { $gt: Date.now() },
+    isDeleted: { $ne: true }
+  });
+
+  if (!user) {
+    const error = new Error('Invalid or expired password reset token');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Set new password
+  user.password = newPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  return user;
+};
+
+/**
+ * Change current password
+ */
+const changePassword = async (userId, currentPassword, newPassword) => {
+  const user = await User.findById(userId).select('+password');
+  if (!user || user.isDeleted) {
+    const error = new Error('User not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const isMatch = await user.comparePassword(currentPassword);
+  if (!isMatch) {
+    const error = new Error('Incorrect current password');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Set new password
+  user.password = newPassword;
+  await user.save();
+
+  return user;
+};
+
+/**
+ * Generate OTP and save to DB
+ */
+const sendOtp = async (email) => {
+  const user = await User.findOne({ email, isDeleted: { $ne: true } });
+  if (!user) {
+    const error = new Error('User not found with this email');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Generate 6-digit numeric OTP
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Set OTP & expiry
+  user.otpCode = otpCode;
+  user.otpExpire = Date.now() + 600000; // 10 minutes
+
+  await user.save();
+
+  return otpCode;
+};
+
+/**
+ * Verify OTP code
+ */
+const verifyOtp = async (email, otp) => {
+  const user = await User.findOne({
+    email,
+    otpCode: otp,
+    otpExpire: { $gt: Date.now() },
+    isDeleted: { $ne: true }
+  });
+
+  if (!user) {
+    const error = new Error('Invalid or expired OTP');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Mark as verified and clear OTP fields
+  user.isEmailVerified = true;
+  user.otpCode = undefined;
+  user.otpExpire = undefined;
+
+  await user.save();
+
+  return user;
+};
+
 module.exports = {
   registerUser,
   loginUser,
   updateUserProfile,
   deleteUserProfile,
+  forgotPassword,
+  resetPassword,
+  changePassword,
+  sendOtp,
+  verifyOtp,
 };

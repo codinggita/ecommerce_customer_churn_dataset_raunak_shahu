@@ -17,8 +17,36 @@ const validateUpdateProfile = [
   body('email').optional().trim().isEmail().withMessage('Please provide a valid email'),
 ];
 
+const validateForgotPassword = [
+  body('email').trim().isEmail().withMessage('Please provide a valid email'),
+];
+
+const validateResetPassword = [
+  body('token').notEmpty().withMessage('Reset token is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long'),
+];
+
+const validateChangePassword = [
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters long'),
+];
+
+const validateSendOtp = [
+  body('email').trim().isEmail().withMessage('Please provide a valid email'),
+];
+
+const validateVerifyOtp = [
+  body('email').trim().isEmail().withMessage('Please provide a valid email'),
+  body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be exactly 6 characters long'),
+];
+
 module.exports = {
   validateRegister,
   validateLogin,
   validateUpdateProfile,
+  validateForgotPassword,
+  validateResetPassword,
+  validateChangePassword,
+  validateSendOtp,
+  validateVerifyOtp,
 };
