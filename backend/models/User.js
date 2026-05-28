@@ -41,6 +41,12 @@ const userSchema = new mongoose.Schema({
   otpExpire: {
     type: Date,
   },
+  verificationToken: {
+    type: String,
+  },
+  verificationTokenExpire: {
+    type: Date,
+  },
   isDeleted: {
     type: Boolean,
     default: false,

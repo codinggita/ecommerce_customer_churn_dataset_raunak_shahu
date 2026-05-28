@@ -40,6 +40,22 @@ const validateVerifyOtp = [
   body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be exactly 6 characters long'),
 ];
 
+const validateVerifyEmail = [
+  body('token').notEmpty().withMessage('Verification token is required'),
+];
+
+const validateResendVerification = [
+  body('email').trim().isEmail().withMessage('Please provide a valid email'),
+];
+
+const validateVerifyToken = [
+  body('token').notEmpty().withMessage('Token is required'),
+];
+
+const validateRefreshToken = [
+  body('token').notEmpty().withMessage('Token is required'),
+];
+
 module.exports = {
   validateRegister,
   validateLogin,
@@ -49,4 +65,8 @@ module.exports = {
   validateChangePassword,
   validateSendOtp,
   validateVerifyOtp,
+  validateVerifyEmail,
+  validateResendVerification,
+  validateVerifyToken,
+  validateRefreshToken,
 };

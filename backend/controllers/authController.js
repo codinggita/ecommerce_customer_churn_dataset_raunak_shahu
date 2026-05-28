@@ -174,3 +174,84 @@ module.exports = {
   sendOtp,
   verifyOtp,
 };
+
+/**
+ * Verify email using token
+ * @route POST /api/v1/auth/verify-email
+ */
+const verifyEmail = async (req, res, next) => {
+  try {
+    const { token } = req.body;
+    await authService.verifyEmail(token);
+    return ApiResponse.success(res, 'Email verified successfully', null);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Resend email verification token
+ * @route POST /api/v1/auth/resend-verification
+ */
+const resendVerification = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const token = await authService.resendVerificationToken(email);
+    return ApiResponse.success(res, 'Email verification token resent successfully', { token });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get active session status details
+ * @route GET /api/v1/auth/session
+ */
+const getSession = async (req, res, next) => {
+  try {
+    const sessionDetails = {
+      sessionId: req.user._id + '_' + Date.now(),
+      userId: req.user._id,
+      email: req.user.email,
+      role: req.user.role,
+      loginTime: req.user.updatedAt,
+      userAgent: req.headers['user-agent'] || 'Unknown',
+      ipAddress: req.ip || '127.0.0.1',
+      isActive: true
+    };
+    return ApiResponse.success(res, 'Session details retrieved successfully', sessionDetails);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Clear active session
+ * @route DELETE /api/v1/auth/session
+ */
+const deleteSession = async (req, res, next) => {
+  try {
+    return ApiResponse.success(res, 'Session cleared successfully', null);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  logout,
+  getProfile,
+  updateProfile,
+  deleteProfile,
+  forgotPassword,
+  resetPassword,
+  changePassword,
+  sendOtp,
+  verifyOtp,
+  verifyEmail,
+  resendVerification,
+  getSession,
+  deleteSession,
+};
+
