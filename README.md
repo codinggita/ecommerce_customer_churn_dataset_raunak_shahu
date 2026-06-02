@@ -64,8 +64,8 @@
 - Formik + Yup for forms
 
 ## 📅 5. Project Timeline
-- **Backend Development:** 13 May 2026 – 28 May 2026 (15 Days)
-- **Frontend Development:** 29 May 2026 – 13 June 2026 (15 Days)
+- **Phase 1: Backend Development** - Implementation of database models, security features, CRUD operations, statistics endpoints, analytics pipelines, role protection middlewares, and Postman API collection.
+- **Phase 2: Frontend Development** - UI development, React components integration, state management, dashboard analytics charts, and deployment configuration.
 
 ## 🏗️ 6. Setup Instructions
 
@@ -117,17 +117,113 @@ CORS_ORIGIN=http://localhost:5173
 ```
 
 ## 📊 8. Dataset Information
-**Source:** E-Commerce Customer Analytics Dataset  
-**Format:** JSON
+- **Source:** E-Commerce Customer Churn Dataset (`ecommerce_customer_churn_dataset.json`)
+- **Format:** JSON
+- **Records Count:** 15,259 customer documents
 
-**Key Fields:**
-- **Customer demographics:** name, email, age, gender, country, city
-- **Purchase behavior:** purchases, averageOrderValue, lifetimeValue
-- **Engagement metrics:** loginFrequency, sessionDuration, mobileUsage
-- **Financial data:** creditBalance, discountRate
-- **Loyalty metrics:** membershipYears, signupQuarter, churned
+### Detailed Data Field Structure:
+- **Demographics:**
+  - `name`: Synthetically generated full name of the customer
+  - `email`: Synthetically generated unique email address
+  - `age`: Customer age (Integer)
+  - `gender`: Gender values (`Male`, `Female`, `Other`)
+  - `country`: Country of residence (e.g., USA, UK, Canada, Germany)
+  - `city`: City name
+- **Customer Behavior:**
+  - `membershipYears`: Years of membership (Decimal/Integer)
+  - `loginFrequency`: Average number of logins per month
+  - `sessionDuration`: Average session duration in minutes
+  - `pagesPerSession`: Average pages browsed per session
+  - `cartAbandonmentRate`: Percentage of abandoned shopping carts
+  - `wishlistItems`: Count of items in customer's wishlist
+  - `daysSinceLastPurchase`: Days since customer last placed an order
+  - `mobileUsage`: Average mobile app usage minutes per month
+- **Financial Metrics:**
+  - `purchases`: Total purchases made
+  - `averageOrderValue`: Average order spending value
+  - `discountRate`: Average discount rate utilized
+  - `returnsRate`: Product returns rate
+  - `creditBalance`: Available credit balance
+  - `lifetimeValue` (LTV): Total calculated customer lifetime value
+- **Engagement Indicators:**
+  - `emailOpenRate`: Email open rate percentage
+  - `customerServiceCalls`: Customer service interaction calls count
+  - `productReviewsWritten`: Total reviews written by the customer
+  - `socialMediaEngagementScore`: Score measuring social media engagement (0 to 100)
+- **Metadata and Targets:**
+  - `churned`: Target binary variable (`0` for Active Customer, `1` for Churned Customer)
+  - `signupQuarter`: Fiscal quarter when customer signed up (`Q1`, `Q2`, `Q3`, `Q4`)
+  - `isDeleted`: Soft delete flag (`true` if deleted, default `false`)
 
-## 🌐 9. API Endpoints Overview (Major Categories)
+*Note: Since the raw source dataset does not contain name or email parameters, the database seeding script dynamically generates a unique full name and email for every document to support correct profile CRUD operations.*
+
+## 📂 9. Entire Project Folder Structure with All Files
+
+```text
+ecommerce_customer_churn_dataset_raunak_shahu/
+├── README.md
+└── backend/
+    ├── .env
+    ├── .env.example
+    ├── .gitignore
+    ├── ecommerce_customer_analytics.postman_collection.json
+    ├── package-lock.json
+    ├── package.json
+    ├── server.js
+    ├── config/
+    │   ├── constants.js
+    │   └── database.js
+    ├── controllers/
+    │   ├── analyticsController.js
+    │   ├── authController.js
+    │   ├── customerController.js
+    │   ├── jwtController.js
+    │   ├── searchController.js
+    │   └── statsController.js
+    ├── data/
+    │   └── ecommerce_customer_churn_dataset.json
+    ├── logs/
+    ├── middlewares/
+    │   ├── authMiddleware.js
+    │   ├── errorMiddleware.js
+    │   ├── loggingMiddleware.js
+    │   ├── rateLimitMiddleware.js
+    │   ├── uploadMiddleware.js
+    │   └── validationMiddleware.js
+    ├── models/
+    │   ├── Customer.js
+    │   ├── index.js
+    │   └── User.js
+    ├── routes/
+    │   ├── analyticsRoutes.js
+    │   ├── authRoutes.js
+    │   ├── customerRoutes.js
+    │   ├── index.js
+    │   ├── jwtRoutes.js
+    │   ├── middlewareRoutes.js
+    │   ├── searchRoutes.js
+    │   └── statsRoutes.js
+    ├── scripts/
+    │   └── importDataset.js
+    ├── services/
+    │   ├── analyticsService.js
+    │   ├── authService.js
+    │   ├── customerService.js
+    │   └── statsService.js
+    ├── uploads/
+    ├── utils/
+    │   ├── apiResponse.js
+    │   ├── filterBuilder.js
+    │   ├── generateToken.js
+    │   ├── paginationHelper.js
+    │   └── seedDatabase.js
+    └── validations/
+        ├── authValidation.js
+        ├── customerValidation.js
+        └── index.js
+```
+
+## 🌐 10. API Endpoints Overview (Major Categories)
 
 | Category | Description |
 | :--- | :--- |
@@ -139,28 +235,6 @@ CORS_ORIGIN=http://localhost:5173
 | **Authentication** | Register, login, profile management |
 | **JWT Protected** | Token-based secure routes |
 
-## 📂 10. Project Structure (Planned)
-
-```text
-backend/
-├── config/          # Database, constants
-├── models/          # Mongoose schemas
-├── controllers/     # Request handlers
-├── routes/          # API endpoints
-├── middlewares/     # Auth, validation, error
-├── services/        # Business logic
-├── utils/           # Helpers, seed script
-├── validations/     # Input validation
-└── server.js        # Entry point
-
-frontend/ (Coming soon)
-├── components/      # Reusable UI
-├── pages/           # Dashboard pages
-├── features/        # Redux slices
-├── services/        # API calls
-└── App.jsx
-```
-
 ## 🎯 11. Deliverables
 - ✅ Complete backend with all APIs
 - ✅ Postman collection for testing
@@ -169,9 +243,5 @@ frontend/ (Coming soon)
 - ✅ Deployment-ready code
 
 ## 🎓 12. College Project Information
-- **Assignment:** Full Stack Project 2026
+- **Assignment:** Full Stack Project
 - **Technology:** MERN Stack
-- **Deadline:** 13 June 2026
-
-## 📜 13. License
-**MIT License** - Educational Purpose
