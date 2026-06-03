@@ -1,6 +1,5 @@
-const ApiResponse = require('../utils/apiResponse');
-const authService = require('../services/authService');
-const generateToken = require('../utils/generateToken');
+const jwt = require('jsonwebtoken');
+const { User } = require('../models');
 const customerService = require('../services/customerService');
 const statsService = require('../services/statsService');
 const analyticsService = require('../services/analyticsService');
@@ -14,17 +13,44 @@ const { getPaginationParams, buildPaginationMetadata } = require('../utils/pagin
 const verifyToken = async (req, res, next) => {
   try {
     const { token } = req.body;
-    const data = await authService.verifyJwtToken(token);
-    return ApiResponse.success(res, 'Token is valid', {
-      decoded: data.decoded,
-      user: data.user
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide token'
+      });
+    }
+
+    // Verify token inline
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallbacksecret');
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Token is valid',
+      data: {
+        decoded,
+        user
+      }
     });
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
-      return ApiResponse.error(res, 'Invalid token format or signature', null, 400);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid token format or signature'
+      });
     }
     if (error.name === 'TokenExpiredError') {
-      return ApiResponse.error(res, 'Token has expired', null, 400);
+      return res.status(400).json({
+        success: false,
+        message: 'Token has expired'
+      });
     }
     next(error);
   }
@@ -37,17 +63,50 @@ const verifyToken = async (req, res, next) => {
 const refreshToken = async (req, res, next) => {
   try {
     const { token } = req.body;
-    const data = await authService.verifyJwtToken(token);
-    const newToken = generateToken(data.user._id);
-    return ApiResponse.success(res, 'Token refreshed successfully', {
-      token: newToken
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide token'
+      });
+    }
+
+    // Verify token inline
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallbacksecret');
+    const user = await User.findById(decoded.id);
+
+    if (!user || user.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate new token directly
+    const newToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET || 'fallbacksecret',
+      { expiresIn: process.env.JWT_EXPIRE || '7d' }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Token refreshed successfully',
+      data: {
+        token: newToken
+      }
     });
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
-      return ApiResponse.error(res, 'Invalid token format or signature', null, 400);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid token format or signature'
+      });
     }
     if (error.name === 'TokenExpiredError') {
-      return ApiResponse.error(res, 'Token has expired, please log in again', null, 400);
+      return res.status(400).json({
+        success: false,
+        message: 'Token has expired, please log in again'
+      });
     }
     next(error);
   }
@@ -59,7 +118,11 @@ const refreshToken = async (req, res, next) => {
  */
 const getJwtProfile = async (req, res, next) => {
   try {
-    return ApiResponse.success(res, 'JWT authenticated user profile fetched successfully', req.user);
+    return res.status(200).json({
+      success: true,
+      message: 'JWT authenticated user profile fetched successfully',
+      data: req.user
+    });
   } catch (error) {
     next(error);
   }
@@ -78,13 +141,17 @@ const getJwtDashboard = async (req, res, next) => {
     const averageOrderValue = await statsService.getAverageOrderValue();
     const churnCounts = await statsService.getChurnCounts();
 
-    return ApiResponse.success(res, 'Dashboard statistics fetched successfully', {
-      totalCustomers,
-      averageAge: Math.round(averageAge * 100) / 100,
-      averageLifetimeValue: Math.round(averageLifetimeValue * 100) / 100,
-      averageCreditBalance: Math.round(averageCreditBalance * 100) / 100,
-      averageOrderValue: Math.round(averageOrderValue * 100) / 100,
-      churnCounts
+    return res.status(200).json({
+      success: true,
+      message: 'Dashboard statistics fetched successfully',
+      data: {
+        totalCustomers,
+        averageAge: Math.round(averageAge * 100) / 100,
+        averageLifetimeValue: Math.round(averageLifetimeValue * 100) / 100,
+        averageCreditBalance: Math.round(averageCreditBalance * 100) / 100,
+        averageOrderValue: Math.round(averageOrderValue * 100) / 100,
+        churnCounts
+      }
     });
   } catch (error) {
     next(error);
@@ -104,9 +171,13 @@ const getPrivateCustomers = async (req, res, next) => {
     const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
     const pagination = buildPaginationMetadata(totalCount, page, limit);
 
-    return ApiResponse.success(res, 'Guarded customer records fetched successfully', {
-      customers: data,
-      pagination,
+    return res.status(200).json({
+      success: true,
+      message: 'Guarded customer records fetched successfully',
+      data: {
+        customers: data,
+        pagination
+      }
     });
   } catch (error) {
     next(error);
@@ -125,12 +196,16 @@ const getPrivateStats = async (req, res, next) => {
     const totalReviewCount = await statsService.getTotalReviewCount();
     const averageMobileUsage = await statsService.getAverageMobileUsage();
 
-    return ApiResponse.success(res, 'Guarded customer statistics metrics fetched successfully', {
-      highestPurchasesCustomer: highestPurchases,
-      highestLifetimeCustomer: highestLifetime,
-      highestCreditCustomer: highestCredit,
-      totalReviewCount,
-      averageMobileUsage: Math.round(averageMobileUsage * 100) / 100,
+    return res.status(200).json({
+      success: true,
+      message: 'Guarded customer statistics metrics fetched successfully',
+      data: {
+        highestPurchasesCustomer: highestPurchases,
+        highestLifetimeCustomer: highestLifetime,
+        highestCreditCustomer: highestCredit,
+        totalReviewCount,
+        averageMobileUsage: Math.round(averageMobileUsage * 100) / 100
+      }
     });
   } catch (error) {
     next(error);
@@ -143,15 +218,19 @@ const getPrivateStats = async (req, res, next) => {
  */
 const getAdminData = async (req, res, next) => {
   try {
-    return ApiResponse.success(res, 'Admin resource accessed successfully', {
-      adminUser: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-      },
-      authorized: true,
-      timestamp: new Date()
+    return res.status(200).json({
+      success: true,
+      message: 'Admin resource accessed successfully',
+      data: {
+        adminUser: {
+          id: req.user._id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role
+        },
+        authorized: true,
+        timestamp: new Date()
+      }
     });
   } catch (error) {
     next(error);
@@ -167,14 +246,18 @@ const getCustomerInsights = async (req, res, next) => {
     const churnAnalysis = await analyticsService.getChurnAnalysis();
     const retentionAnalysis = await analyticsService.getRetentionAnalysis();
 
-    return ApiResponse.success(res, 'Customer insights analysis fetched successfully', {
-      churnAnalysis,
-      retentionAnalysis,
-      insights: [
-        'Customers with more customer service calls have a higher probability of churning.',
-        'High value customer segments show higher loyalty in recent cohorts.',
-        'Mobile app engagement correlates positively with overall lifetime value.'
-      ]
+    return res.status(200).json({
+      success: true,
+      message: 'Customer insights analysis fetched successfully',
+      data: {
+        churnAnalysis,
+        retentionAnalysis,
+        insights: [
+          'Customers with more customer service calls have a higher probability of churning.',
+          'High value customer segments show higher loyalty in recent cohorts.',
+          'Mobile app engagement correlates positively with overall lifetime value.'
+        ]
+      }
     });
   } catch (error) {
     next(error);
@@ -189,5 +272,5 @@ module.exports = {
   getPrivateCustomers,
   getPrivateStats,
   getAdminData,
-  getCustomerInsights,
+  getCustomerInsights
 };
