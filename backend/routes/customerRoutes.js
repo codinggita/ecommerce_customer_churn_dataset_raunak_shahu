@@ -4,15 +4,7 @@ const ApiResponse = require('../utils/apiResponse');
 const constants = require('../config/constants');
 const upload = require('../middlewares/uploadMiddleware');
 const customerController = require('../controllers/customerController');
-const { 
-  validateCreate, 
-  validateUpdate, 
-  validateId,
-  validateBulkCreate,
-  validateBulkUpdate,
-  validateBulkDelete 
-} = require('../validations/customerValidation');
-const validate = require('../middlewares/validationMiddleware');
+
 
 // --- SYSTEM & UTILITY ROUTES (Place before parameter routes) ---
 
@@ -80,7 +72,7 @@ router.get('/random', customerController.getRandomCustomer);
  * @desc    Check whether customer exists or not (Must be registered before /:id)
  * @access  Public
  */
-router.get('/exists/:id', validateId, validate, customerController.checkCustomerExists);
+router.get('/exists/:id', customerController.checkCustomerExists);
 
 
 // --- STATIC CATEGORICAL SEGMENTS ---
@@ -434,21 +426,21 @@ router.get('/churn-status/:status', customerController.getCustomersByChurnStatus
  * @desc    Insert multiple customer records together
  * @access  Public
  */
-router.post('/bulk-create', validateBulkCreate, validate, customerController.bulkCreateCustomers);
+router.post('/bulk-create', customerController.bulkCreateCustomers);
 
 /**
  * @route   PATCH /api/v1/customers/bulk-update
  * @desc    Update multiple customer records together
  * @access  Public
  */
-router.patch('/bulk-update', validateBulkUpdate, validate, customerController.bulkUpdateCustomers);
+router.patch('/bulk-update', customerController.bulkUpdateCustomers);
 
 /**
  * @route   DELETE /api/v1/customers/bulk-delete
  * @desc    Delete multiple customer records
  * @access  Public
  */
-router.delete('/bulk-delete', validateBulkDelete, validate, customerController.bulkDeleteCustomers);
+router.delete('/bulk-delete', customerController.bulkDeleteCustomers);
 
 
 // --- CORE CRUD ROUTES ---
@@ -465,34 +457,34 @@ router.get('/', customerController.getCustomers);
  * @desc    Add a new customer record
  * @access  Public
  */
-router.post('/', validateCreate, validate, customerController.createCustomer);
+router.post('/', customerController.createCustomer);
 
 /**
  * @route   GET /api/v1/customers/:id
  * @desc    Fetch single customer record by ID
  * @access  Public
  */
-router.get('/:id', validateId, validate, customerController.getCustomerById);
+router.get('/:id', customerController.getCustomerById);
 
 /**
  * @route   PUT /api/v1/customers/:id
  * @desc    Replace complete customer record (PUT)
  * @access  Public
  */
-router.put('/:id', validateId, validate, validateCreate, validate, customerController.replaceCustomer);
+router.put('/:id', customerController.replaceCustomer);
 
 /**
  * @route   PATCH /api/v1/customers/:id
  * @desc    Update specific customer fields (PATCH)
  * @access  Public
  */
-router.patch('/:id', validateId, validate, validateUpdate, validate, customerController.updateCustomer);
+router.patch('/:id', customerController.updateCustomer);
 
 /**
  * @route   DELETE /api/v1/customers/:id
  * @desc    Remove customer record from database (Soft delete)
  * @access  Public
  */
-router.delete('/:id', validateId, validate, customerController.deleteCustomer);
+router.delete('/:id', customerController.deleteCustomer);
 
 module.exports = router;

@@ -1,10 +1,118 @@
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
-const customerService = require('../services/customerService');
+const { User, Customer } = require('../models');
 const statsService = require('../services/statsService');
 const analyticsService = require('../services/analyticsService');
-const { buildCustomerFilter } = require('../utils/filterBuilder');
-const { getPaginationParams, buildPaginationMetadata } = require('../utils/paginationHelper');
+
+// Inline helper to get pagination offsets
+const getPaginationParams = (queryParams) => {
+  let page = parseInt(queryParams.page, 10);
+  let limit = parseInt(queryParams.limit, 10);
+
+  if (isNaN(page) || page <= 0) page = 1;
+  if (isNaN(limit) || limit <= 0) {
+    limit = 10;
+  } else if (limit > 100) {
+    limit = 100;
+  }
+
+  const skip = (page - 1) * limit;
+  return { page, limit, skip };
+};
+
+// Inline helper to format pagination details
+const buildPaginationMetadata = (totalCount, page, limit) => {
+  const totalPages = Math.ceil(totalCount / limit);
+  return {
+    totalCount,
+    totalPages,
+    currentPage: page,
+    limit,
+    hasPrevPage: page > 1,
+    hasNextPage: page < totalPages
+  };
+};
+
+// Inline helper to parse Mongoose sort directions
+const getSortObject = (sortQuery) => {
+  let sort = { createdAt: -1 };
+  if (sortQuery) {
+    const isDesc = sortQuery.startsWith('-');
+    const field = isDesc ? sortQuery.substring(1) : sortQuery;
+    sort = { [field]: isDesc ? -1 : 1 };
+  }
+  return sort;
+};
+
+// Helper for parsing numeric inputs safely
+const parseNumber = (val) => {
+  if (val === undefined || val === null || val === '') return null;
+  const num = Number(val);
+  return isNaN(num) ? null : num;
+};
+
+// Inline helper to compile query parameter filters
+const buildCustomerFilter = (queryParams) => {
+  const filter = { isDeleted: { $ne: true } };
+
+  if (queryParams.country) filter.country = { $regex: new RegExp(`^${queryParams.country}$`, 'i') };
+  if (queryParams.city) filter.city = { $regex: new RegExp(`^${queryParams.city}$`, 'i') };
+  if (queryParams.gender) filter.gender = { $regex: new RegExp(`^${queryParams.gender}$`, 'i') };
+  if (queryParams.signupQuarter) filter.signupQuarter = { $regex: new RegExp(`^${queryParams.signupQuarter}$`, 'i') };
+
+  const minAge = parseNumber(queryParams.minAge);
+  const maxAge = parseNumber(queryParams.maxAge);
+  if (minAge !== null || maxAge !== null) {
+    filter.age = {};
+    if (minAge !== null) filter.age.$gte = minAge;
+    if (maxAge !== null) filter.age.$lte = maxAge;
+  }
+  if (queryParams.age) {
+    const age = parseNumber(queryParams.age);
+    if (age !== null) filter.age = age;
+  }
+
+  if (queryParams.churned !== undefined && queryParams.churned !== '') {
+    const churnedVal = parseNumber(queryParams.churned);
+    if (churnedVal !== null) filter.churned = churnedVal;
+  }
+
+  if (queryParams.membershipYears !== undefined && queryParams.membershipYears !== '') {
+    const mYears = parseNumber(queryParams.membershipYears);
+    if (mYears !== null) filter.membershipYears = mYears;
+  }
+
+  if (queryParams.minPurchases !== undefined && queryParams.minPurchases !== '') {
+    const minPurchases = parseNumber(queryParams.minPurchases);
+    if (minPurchases !== null) filter.purchases = { $gte: minPurchases };
+  }
+
+  if (queryParams.minLifetime !== undefined && queryParams.minLifetime !== '') {
+    const minLifetime = parseNumber(queryParams.minLifetime);
+    if (minLifetime !== null) filter.lifetimeValue = { $gte: minLifetime };
+  }
+
+  if (queryParams.minCredit !== undefined && queryParams.minCredit !== '') {
+    const minCredit = parseNumber(queryParams.minCredit);
+    if (minCredit !== null) filter.creditBalance = { $gte: minCredit };
+  }
+
+  if (queryParams.minLoginFrequency !== undefined && queryParams.minLoginFrequency !== '') {
+    const minLogin = parseNumber(queryParams.minLoginFrequency);
+    if (minLogin !== null) filter.loginFrequency = { $gte: minLogin };
+  }
+
+  if (queryParams.minMobileUsage !== undefined && queryParams.minMobileUsage !== '') {
+    const minMobile = parseNumber(queryParams.minMobileUsage);
+    if (minMobile !== null) filter.mobileUsage = { $gte: minMobile };
+  }
+
+  if (queryParams.minDiscount !== undefined && queryParams.minDiscount !== '') {
+    const minDiscount = parseNumber(queryParams.minDiscount);
+    if (minDiscount !== null) filter.discountRate = { $gte: minDiscount };
+  }
+
+  return filter;
+};
 
 /**
  * Verify a JWT token
@@ -166,9 +274,10 @@ const getPrivateCustomers = async (req, res, next) => {
   try {
     const filter = buildCustomerFilter(req.query);
     const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
+    const sort = getSortObject(req.query.sort);
 
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const data = await Customer.find(filter).sort(sort).skip(skip).limit(limit);
+    const totalCount = await Customer.countDocuments(filter);
     const pagination = buildPaginationMetadata(totalCount, page, limit);
 
     return res.status(200).json({

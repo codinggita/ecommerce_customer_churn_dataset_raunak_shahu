@@ -1,25 +1,136 @@
 const fs = require('fs');
+const mongoose = require('mongoose');
 const seedDatabase = require('../utils/seedDatabase');
-const ApiResponse = require('../utils/apiResponse');
-const customerService = require('../services/customerService');
-const { buildCustomerFilter } = require('../utils/filterBuilder');
-const { getPaginationParams, buildPaginationMetadata } = require('../utils/paginationHelper');
+const { Customer } = require('../models');
 
-/**
- * Fetch multiple customer records (filters, pagination, sorting)
- */
-const getCustomers = async (req, res, next) => {
+// Inline helper to get pagination offsets
+const getPaginationParams = (queryParams) => {
+  let page = parseInt(queryParams.page, 10);
+  let limit = parseInt(queryParams.limit, 10);
+
+  if (isNaN(page) || page <= 0) page = 1;
+  if (isNaN(limit) || limit <= 0) {
+    limit = 10;
+  } else if (limit > 100) {
+    limit = 100;
+  }
+
+  const skip = (page - 1) * limit;
+  return { page, limit, skip };
+};
+
+// Inline helper to format pagination details
+const buildPaginationMetadata = (totalCount, page, limit) => {
+  const totalPages = Math.ceil(totalCount / limit);
+  return {
+    totalCount,
+    totalPages,
+    currentPage: page,
+    limit,
+    hasPrevPage: page > 1,
+    hasNextPage: page < totalPages
+  };
+};
+
+// Inline helper to parse Mongoose sort directions
+const getSortObject = (sortQuery) => {
+  let sort = { createdAt: -1 };
+  if (sortQuery) {
+    const isDesc = sortQuery.startsWith('-');
+    const field = isDesc ? sortQuery.substring(1) : sortQuery;
+    sort = { [field]: isDesc ? -1 : 1 };
+  }
+  return sort;
+};
+
+// Helper for parsing numeric inputs safely
+const parseNumber = (val) => {
+  if (val === undefined || val === null || val === '') return null;
+  const num = Number(val);
+  return isNaN(num) ? null : num;
+};
+
+// Inline helper to compile query parameter filters
+const buildCustomerFilter = (queryParams) => {
+  const filter = { isDeleted: { $ne: true } };
+
+  if (queryParams.country) filter.country = { $regex: new RegExp(`^${queryParams.country}$`, 'i') };
+  if (queryParams.city) filter.city = { $regex: new RegExp(`^${queryParams.city}$`, 'i') };
+  if (queryParams.gender) filter.gender = { $regex: new RegExp(`^${queryParams.gender}$`, 'i') };
+  if (queryParams.signupQuarter) filter.signupQuarter = { $regex: new RegExp(`^${queryParams.signupQuarter}$`, 'i') };
+
+  const minAge = parseNumber(queryParams.minAge);
+  const maxAge = parseNumber(queryParams.maxAge);
+  if (minAge !== null || maxAge !== null) {
+    filter.age = {};
+    if (minAge !== null) filter.age.$gte = minAge;
+    if (maxAge !== null) filter.age.$lte = maxAge;
+  }
+  if (queryParams.age) {
+    const age = parseNumber(queryParams.age);
+    if (age !== null) filter.age = age;
+  }
+
+  if (queryParams.churned !== undefined && queryParams.churned !== '') {
+    const churnedVal = parseNumber(queryParams.churned);
+    if (churnedVal !== null) filter.churned = churnedVal;
+  }
+
+  if (queryParams.membershipYears !== undefined && queryParams.membershipYears !== '') {
+    const mYears = parseNumber(queryParams.membershipYears);
+    if (mYears !== null) filter.membershipYears = mYears;
+  }
+
+  if (queryParams.minPurchases !== undefined && queryParams.minPurchases !== '') {
+    const minPurchases = parseNumber(queryParams.minPurchases);
+    if (minPurchases !== null) filter.purchases = { $gte: minPurchases };
+  }
+
+  if (queryParams.minLifetime !== undefined && queryParams.minLifetime !== '') {
+    const minLifetime = parseNumber(queryParams.minLifetime);
+    if (minLifetime !== null) filter.lifetimeValue = { $gte: minLifetime };
+  }
+
+  if (queryParams.minCredit !== undefined && queryParams.minCredit !== '') {
+    const minCredit = parseNumber(queryParams.minCredit);
+    if (minCredit !== null) filter.creditBalance = { $gte: minCredit };
+  }
+
+  if (queryParams.minLoginFrequency !== undefined && queryParams.minLoginFrequency !== '') {
+    const minLogin = parseNumber(queryParams.minLoginFrequency);
+    if (minLogin !== null) filter.loginFrequency = { $gte: minLogin };
+  }
+
+  if (queryParams.minMobileUsage !== undefined && queryParams.minMobileUsage !== '') {
+    const minMobile = parseNumber(queryParams.minMobileUsage);
+    if (minMobile !== null) filter.mobileUsage = { $gte: minMobile };
+  }
+
+  if (queryParams.minDiscount !== undefined && queryParams.minDiscount !== '') {
+    const minDiscount = parseNumber(queryParams.minDiscount);
+    if (minDiscount !== null) filter.discountRate = { $gte: minDiscount };
+  }
+
+  return filter;
+};
+
+// General helper to query and respond with paginated list
+const queryAndRespond = async (req, res, next, filter, successMsg) => {
   try {
-    const filter = buildCustomerFilter(req.query);
     const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
+    const sort = getSortObject(req.query.sort);
 
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
+    const data = await Customer.find(filter).sort(sort).skip(skip).limit(limit);
+    const totalCount = await Customer.countDocuments(filter);
     const pagination = buildPaginationMetadata(totalCount, page, limit);
 
-    return ApiResponse.success(res, 'Customers fetched successfully', {
-      customers: data,
-      pagination,
+    return res.status(200).json({
+      success: true,
+      message: successMsg,
+      data: {
+        customers: data,
+        pagination
+      }
     });
   } catch (error) {
     next(error);
@@ -27,17 +138,36 @@ const getCustomers = async (req, res, next) => {
 };
 
 /**
+ * Fetch multiple customer records (filters, pagination, sorting)
+ */
+const getCustomers = async (req, res, next) => {
+  const filter = buildCustomerFilter(req.query);
+  await queryAndRespond(req, res, next, filter, 'Customers fetched successfully');
+};
+
+/**
  * Fetch a single customer record by ID
  */
 const getCustomerById = async (req, res, next) => {
   try {
-    const customer = await customerService.getCustomerById(req.params.id);
-    
-    if (!customer) {
-      return ApiResponse.error(res, `Customer not found with ID: ${req.params.id}`, null, 404);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid Customer MongoDB ID'
+      });
     }
-
-    return ApiResponse.success(res, 'Customer details fetched successfully', customer);
+    const customer = await Customer.findOne({ _id: req.params.id, isDeleted: { $ne: true } });
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: `Customer not found with ID: ${req.params.id}`
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Customer details fetched successfully',
+      data: customer
+    });
   } catch (error) {
     next(error);
   }
@@ -48,8 +178,18 @@ const getCustomerById = async (req, res, next) => {
  */
 const createCustomer = async (req, res, next) => {
   try {
-    const customer = await customerService.createCustomer(req.body);
-    return ApiResponse.success(res, 'Customer created successfully', customer, 201);
+    if (!req.body.name || !req.body.email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide name and email'
+      });
+    }
+    const customer = await Customer.create(req.body);
+    return res.status(201).json({
+      success: true,
+      message: 'Customer created successfully',
+      data: customer
+    });
   } catch (error) {
     next(error);
   }
@@ -60,13 +200,28 @@ const createCustomer = async (req, res, next) => {
  */
 const replaceCustomer = async (req, res, next) => {
   try {
-    const customer = await customerService.replaceCustomer(req.params.id, req.body);
-    
-    if (!customer) {
-      return ApiResponse.error(res, `Customer not found with ID: ${req.params.id}`, null, 404);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid Customer MongoDB ID'
+      });
     }
-
-    return ApiResponse.success(res, 'Customer record replaced successfully', customer);
+    const customer = await Customer.findOneAndReplace(
+      { _id: req.params.id, isDeleted: { $ne: true } },
+      { ...req.body, isDeleted: false },
+      { new: true, runValidators: true }
+    );
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: `Customer not found with ID: ${req.params.id}`
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Customer record replaced successfully',
+      data: customer
+    });
   } catch (error) {
     next(error);
   }
@@ -77,13 +232,28 @@ const replaceCustomer = async (req, res, next) => {
  */
 const updateCustomer = async (req, res, next) => {
   try {
-    const customer = await customerService.updateCustomer(req.params.id, req.body);
-    
-    if (!customer) {
-      return ApiResponse.error(res, `Customer not found with ID: ${req.params.id}`, null, 404);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid Customer MongoDB ID'
+      });
     }
-
-    return ApiResponse.success(res, 'Customer record updated successfully', customer);
+    const customer = await Customer.findOneAndUpdate(
+      { _id: req.params.id, isDeleted: { $ne: true } },
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: `Customer not found with ID: ${req.params.id}`
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Customer record updated successfully',
+      data: customer
+    });
   } catch (error) {
     next(error);
   }
@@ -94,15 +264,30 @@ const updateCustomer = async (req, res, next) => {
  */
 const deleteCustomer = async (req, res, next) => {
   try {
-    const customer = await customerService.deleteCustomer(req.params.id);
-    
-    if (!customer) {
-      return ApiResponse.error(res, `Customer not found with ID: ${req.params.id}`, null, 404);
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid Customer MongoDB ID'
+      });
     }
-
-    return ApiResponse.success(res, 'Customer record deleted successfully (soft delete)', {
-      id: customer._id,
-      isDeleted: customer.isDeleted,
+    const customer = await Customer.findOneAndUpdate(
+      { _id: req.params.id, isDeleted: { $ne: true } },
+      { $set: { isDeleted: true } },
+      { new: true }
+    );
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: `Customer not found with ID: ${req.params.id}`
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: 'Customer record deleted successfully (soft delete)',
+      data: {
+        id: customer._id,
+        isDeleted: customer.isDeleted
+      }
     });
   } catch (error) {
     next(error);
@@ -114,10 +299,21 @@ const deleteCustomer = async (req, res, next) => {
  */
 const checkCustomerExists = async (req, res, next) => {
   try {
-    const exists = await customerService.checkCustomerExists(req.params.id);
-    return ApiResponse.success(res, `Customer check: ${exists ? 'exists' : 'does not exist'}`, {
-      exists,
-      id: req.params.id,
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid Customer MongoDB ID'
+      });
+    }
+    const count = await Customer.countDocuments({ _id: req.params.id, isDeleted: { $ne: true } });
+    const exists = count > 0;
+    return res.status(200).json({
+      success: true,
+      message: `Customer check: ${exists ? 'exists' : 'does not exist'}`,
+      data: {
+        exists,
+        id: req.params.id
+      }
     });
   } catch (error) {
     next(error);
@@ -129,11 +325,21 @@ const checkCustomerExists = async (req, res, next) => {
  */
 const bulkCreateCustomers = async (req, res, next) => {
   try {
-    const created = await customerService.bulkCreateCustomers(req.body.customers);
-    return ApiResponse.success(res, `Successfully created ${created.length} customers in bulk`, {
-      count: created.length,
-      customers: created,
-    }, 201);
+    if (!req.body.customers || !Array.isArray(req.body.customers) || req.body.customers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Customers must be a non-empty array'
+      });
+    }
+    const created = await Customer.insertMany(req.body.customers, { ordered: false });
+    return res.status(201).json({
+      success: true,
+      message: `Successfully created ${created.length} customers in bulk`,
+      data: {
+        count: created.length,
+        customers: created
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -144,10 +350,36 @@ const bulkCreateCustomers = async (req, res, next) => {
  */
 const bulkUpdateCustomers = async (req, res, next) => {
   try {
-    const result = await customerService.bulkUpdateCustomers(req.body);
-    return ApiResponse.success(res, 'Bulk update completed successfully', {
-      matchedCount: result.matchedCount || result.nMatched || 0,
-      modifiedCount: result.modifiedCount || result.nModified || 0,
+    const { ids, updates, list } = req.body;
+    let result;
+
+    if (ids && Array.isArray(ids) && updates) {
+      result = await Customer.updateMany(
+        { _id: { $in: ids }, isDeleted: { $ne: true } },
+        { $set: updates }
+      );
+    } else if (list && Array.isArray(list)) {
+      const operations = list.map(item => ({
+        updateOne: {
+          filter: { _id: item.id, isDeleted: { $ne: true } },
+          update: { $set: item.data }
+        }
+      }));
+      result = await Customer.bulkWrite(operations);
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid bulk update payload format'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Bulk update completed successfully',
+      data: {
+        matchedCount: result.matchedCount || result.nMatched || 0,
+        modifiedCount: result.modifiedCount || result.nModified || 0
+      }
     });
   } catch (error) {
     next(error);
@@ -159,9 +391,22 @@ const bulkUpdateCustomers = async (req, res, next) => {
  */
 const bulkDeleteCustomers = async (req, res, next) => {
   try {
-    const result = await customerService.bulkDeleteCustomers(req.body.ids);
-    return ApiResponse.success(res, `Bulk delete completed: soft-deleted ${result.modifiedCount || result.nModified || 0} records`, {
-      deletedCount: result.modifiedCount || result.nModified || 0,
+    if (!req.body.ids || !Array.isArray(req.body.ids) || req.body.ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'IDs must be a non-empty array of MongoDB IDs'
+      });
+    }
+    const result = await Customer.updateMany(
+      { _id: { $in: req.body.ids }, isDeleted: { $ne: true } },
+      { $set: { isDeleted: true } }
+    );
+    return res.status(200).json({
+      success: true,
+      message: `Bulk delete completed: soft-deleted ${result.modifiedCount || result.nModified || 0} records`,
+      data: {
+        deletedCount: result.modifiedCount || result.nModified || 0
+      }
     });
   } catch (error) {
     next(error);
@@ -173,11 +418,21 @@ const bulkDeleteCustomers = async (req, res, next) => {
  */
 const getRandomCustomer = async (req, res, next) => {
   try {
-    const customer = await customerService.getRandomCustomer();
-    if (!customer) {
-      return ApiResponse.error(res, 'No customers available in database', null, 404);
+    const results = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $sample: { size: 1 } }
+    ]);
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No customers available in database'
+      });
     }
-    return ApiResponse.success(res, 'Random customer retrieved successfully', customer);
+    return res.status(200).json({
+      success: true,
+      message: 'Random customer retrieved successfully',
+      data: results[0]
+    });
   } catch (error) {
     next(error);
   }
@@ -187,66 +442,27 @@ const getRandomCustomer = async (req, res, next) => {
  * Fetch customers by country with pagination
  */
 const getCustomersByCountry = async (req, res, next) => {
-  try {
-    const { country } = req.params;
-    const filter = { country: { $regex: new RegExp(`^${country}$`, 'i') }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers from country '${country}' fetched successfully`, {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  const { country } = req.params;
+  const filter = { country: { $regex: new RegExp(`^${country}$`, 'i') }, isDeleted: { $ne: true } };
+  await queryAndRespond(req, res, next, filter, `Customers from country '${country}' fetched successfully`);
 };
 
 /**
  * Fetch customers by city with pagination
  */
 const getCustomersByCity = async (req, res, next) => {
-  try {
-    const { city } = req.params;
-    const filter = { city: { $regex: new RegExp(`^${city}$`, 'i') }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers from city '${city}' fetched successfully`, {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  const { city } = req.params;
+  const filter = { city: { $regex: new RegExp(`^${city}$`, 'i') }, isDeleted: { $ne: true } };
+  await queryAndRespond(req, res, next, filter, `Customers from city '${city}' fetched successfully`);
 };
 
 /**
  * Fetch customers by gender with pagination
  */
 const getCustomersByGender = async (req, res, next) => {
-  try {
-    const { gender } = req.params;
-    const filter = { gender: { $regex: new RegExp(`^${gender}$`, 'i') }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers with gender '${gender}' fetched successfully`, {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  const { gender } = req.params;
+  const filter = { gender: { $regex: new RegExp(`^${gender}$`, 'i') }, isDeleted: { $ne: true } };
+  await queryAndRespond(req, res, next, filter, `Customers with gender '${gender}' fetched successfully`);
 };
 
 /**
@@ -254,24 +470,15 @@ const getCustomersByGender = async (req, res, next) => {
  */
 const getCustomersByAge = async (req, res, next) => {
   try {
-    const { age } = req.params;
-    const ageNum = parseInt(age, 10);
-
-    if (isNaN(ageNum)) {
-      return ApiResponse.error(res, 'Invalid age value. Age must be a numeric integer.', null, 400);
+    const age = parseInt(req.params.age, 10);
+    if (isNaN(age) || age < 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid age parameter'
+      });
     }
-
-    const filter = { age: ageNum, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers of age ${age} fetched successfully`, {
-      customers: data,
-      pagination,
-    });
+    const filter = { age, isDeleted: { $ne: true } };
+    await queryAndRespond(req, res, next, filter, `Customers with age ${age} fetched successfully`);
   } catch (error) {
     next(error);
   }
@@ -281,988 +488,327 @@ const getCustomersByAge = async (req, res, next) => {
  * Fetch customers by signup quarter with pagination
  */
 const getCustomersBySignupQuarter = async (req, res, next) => {
-  try {
-    const { quarter } = req.params;
-    const filter = { signupQuarter: { $regex: new RegExp(`^${quarter}$`, 'i') }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers registered in quarter '${quarter}' fetched successfully`, {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  const { quarter } = req.params;
+  const filter = { signupQuarter: { $regex: new RegExp(`^${quarter}$`, 'i') }, isDeleted: { $ne: true } };
+  await queryAndRespond(req, res, next, filter, `Customers from signup quarter '${quarter}' fetched successfully`);
 };
 
 /**
- * Fetch customers by login frequency (greater than or equal to value)
+ * Filter by login frequency
  */
 const getCustomersByLoginFrequency = async (req, res, next) => {
   try {
-    const { value } = req.params;
-    const numericVal = Number(value);
-    
-    if (isNaN(numericVal)) {
-      return ApiResponse.error(res, 'Value must be a valid number', null, 400);
+    const value = parseFloat(req.params.value);
+    if (isNaN(value)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid threshold value' });
     }
-
-    const filter = { loginFrequency: { $gte: numericVal }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers with login frequency >= ${value} fetched successfully`, {
-      customers: data,
-      pagination,
-    });
+    const filter = { loginFrequency: { $gte: value }, isDeleted: { $ne: true } };
+    await queryAndRespond(req, res, next, filter, `Customers with login frequency >= ${value} fetched successfully`);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Fetch customers by average session duration (greater than or equal to value)
+ * Filter by session duration
  */
 const getCustomersBySessionDuration = async (req, res, next) => {
   try {
-    const { value } = req.params;
-    const numericVal = Number(value);
-    
-    if (isNaN(numericVal)) {
-      return ApiResponse.error(res, 'Value must be a valid number', null, 400);
+    const value = parseFloat(req.params.value);
+    if (isNaN(value)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid threshold value' });
     }
-
-    const filter = { sessionDuration: { $gte: numericVal }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers with session duration >= ${value} fetched successfully`, {
-      customers: data,
-      pagination,
-    });
+    const filter = { sessionDuration: { $gte: value }, isDeleted: { $ne: true } };
+    await queryAndRespond(req, res, next, filter, `Customers with session duration >= ${value} fetched successfully`);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Fetch customers by total purchases (greater than or equal to value)
+ * Filter by purchases
  */
 const getCustomersByPurchases = async (req, res, next) => {
   try {
-    const { value } = req.params;
-    const numericVal = Number(value);
-    
-    if (isNaN(numericVal)) {
-      return ApiResponse.error(res, 'Value must be a valid number', null, 400);
+    const value = parseFloat(req.params.value);
+    if (isNaN(value)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid threshold value' });
     }
-
-    const filter = { purchases: { $gte: numericVal }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers with total purchases >= ${value} fetched successfully`, {
-      customers: data,
-      pagination,
-    });
+    const filter = { purchases: { $gte: value }, isDeleted: { $ne: true } };
+    await queryAndRespond(req, res, next, filter, `Customers with total purchases >= ${value} fetched successfully`);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Fetch customers by lifetime value (greater than or equal to value)
+ * Filter by lifetime value
  */
 const getCustomersByLifetimeValue = async (req, res, next) => {
   try {
-    const { value } = req.params;
-    const numericVal = Number(value);
-    
-    if (isNaN(numericVal)) {
-      return ApiResponse.error(res, 'Value must be a valid number', null, 400);
+    const value = parseFloat(req.params.value);
+    if (isNaN(value)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid threshold value' });
     }
-
-    const filter = { lifetimeValue: { $gte: numericVal }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers with lifetime value >= ${value} fetched successfully`, {
-      customers: data,
-      pagination,
-    });
+    const filter = { lifetimeValue: { $gte: value }, isDeleted: { $ne: true } };
+    await queryAndRespond(req, res, next, filter, `Customers with lifetime value >= ${value} fetched successfully`);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Fetch customers by credit balance (greater than or equal to value)
+ * Filter by credit balance
  */
 const getCustomersByCreditBalance = async (req, res, next) => {
   try {
-    const { value } = req.params;
-    const numericVal = Number(value);
-    
-    if (isNaN(numericVal)) {
-      return ApiResponse.error(res, 'Value must be a valid number', null, 400);
+    const value = parseFloat(req.params.value);
+    if (isNaN(value)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid threshold value' });
     }
-
-    const filter = { creditBalance: { $gte: numericVal }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers with credit balance >= ${value} fetched successfully`, {
-      customers: data,
-      pagination,
-    });
+    const filter = { creditBalance: { $gte: value }, isDeleted: { $ne: true } };
+    await queryAndRespond(req, res, next, filter, `Customers with credit balance >= ${value} fetched successfully`);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Fetch customers by churn status
+ * Filter by churn status
  */
 const getCustomersByChurnStatus = async (req, res, next) => {
   try {
     const { status } = req.params;
-    let churnedVal;
-
+    let filter = { isDeleted: { $ne: true } };
     if (status === '1' || status.toLowerCase() === 'churned') {
-      churnedVal = 1;
+      filter.churned = 1;
     } else if (status === '0' || status.toLowerCase() === 'active') {
-      churnedVal = 0;
+      filter.churned = 0;
     } else {
-      return ApiResponse.error(res, 'Invalid churn status. Allowed values are: 0, 1, active, or churned.', null, 400);
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid churn status (0, 1, active, or churned)'
+      });
     }
-
-    const filter = { churned: churnedVal, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, `Customers with churn status '${status}' fetched successfully`, {
-      customers: data,
-      pagination,
-    });
+    await queryAndRespond(req, res, next, filter, `Customers with churn status '${status}' fetched successfully`);
   } catch (error) {
     next(error);
   }
 };
 
 /**
- * Fetch churned customers
+ * Churned segment
  */
 const getChurnedCustomers = async (req, res, next) => {
-  try {
-    const filter = { churned: 1, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Churned customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { churned: 1, isDeleted: { $ne: true } }, 'Churned segment fetched successfully');
 };
 
 /**
- * Fetch active customers
+ * Active segment
  */
 const getActiveCustomers = async (req, res, next) => {
-  try {
-    const filter = { churned: 0, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Active customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { churned: 0, isDeleted: { $ne: true } }, 'Active segment fetched successfully');
 };
 
 /**
- * Fetch high value customers (lifetimeValue >= 1000)
+ * High value segment
  */
 const getHighValueCustomers = async (req, res, next) => {
-  try {
-    const filter = { lifetimeValue: { $gte: 1000 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'High value customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { lifetimeValue: { $gte: 1000 }, isDeleted: { $ne: true } }, 'High value segment fetched successfully');
 };
 
 /**
- * Fetch high purchasing customers (purchases >= 10)
+ * High purchases segment
  */
 const getHighPurchasesCustomers = async (req, res, next) => {
-  try {
-    const filter = { purchases: { $gte: 10 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'High purchasing customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { purchases: { $gte: 10 }, isDeleted: { $ne: true } }, 'High purchases segment fetched successfully');
 };
 
 /**
- * Fetch customers with high credit balance (creditBalance >= 2000)
+ * High credit segment
  */
 const getHighCreditCustomers = async (req, res, next) => {
-  try {
-    const filter = { creditBalance: { $gte: 2000 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'High credit balance customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { creditBalance: { $gte: 2000 }, isDeleted: { $ne: true } }, 'High credit balance segment fetched successfully');
 };
 
 /**
- * Fetch highly engaged customers (loginFrequency >= 15 AND sessionDuration >= 30)
+ * High engagement segment
  */
 const getHighEngagementCustomers = async (req, res, next) => {
-  try {
-    const filter = { 
-      loginFrequency: { $gte: 15 }, 
-      sessionDuration: { $gte: 30 }, 
-      isDeleted: { $ne: true } 
-    };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Highly engaged customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  const filter = { loginFrequency: { $gte: 15 }, sessionDuration: { $gte: 30 }, isDeleted: { $ne: true } };
+  await queryAndRespond(req, res, next, filter, 'Highly engaged segment fetched successfully');
 };
 
 /**
- * Fetch customers with high mobile app usage (mobileUsage >= 20)
- * @route GET /api/v1/customers/high-mobile-usage
+ * High mobile usage segment
  */
 const getHighMobileUsageCustomers = async (req, res, next) => {
-  try {
-    const filter = { mobileUsage: { $gte: 20 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'High mobile usage customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { mobileUsage: { $gte: 15 }, isDeleted: { $ne: true } }, 'High mobile app usage segment fetched successfully');
 };
 
 /**
- * Fetch customers with high discount usage (discountRate >= 40)
- * @route GET /api/v1/customers/high-discount-users
+ * High discount usage segment
  */
 const getHighDiscountCustomers = async (req, res, next) => {
-  try {
-    const filter = { discountRate: { $gte: 40 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'High discount usage customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { discountRate: { $gte: 20 }, isDeleted: { $ne: true } }, 'High discount usage rate segment fetched successfully');
 };
 
 /**
- * Fetch recently active buyers (daysSinceLastPurchase <= 30)
- * @route GET /api/v1/customers/recent-buyers
+ * Recent buyers segment
  */
 const getRecentBuyers = async (req, res, next) => {
-  try {
-    const filter = { daysSinceLastPurchase: { $lte: 30 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Recently active buyers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { daysSinceLastPurchase: { $lte: 10 }, isDeleted: { $ne: true } }, 'Recently active buyers segment fetched successfully');
 };
 
 /**
- * Fetch inactive buyers (daysSinceLastPurchase >= 90)
- * @route GET /api/v1/customers/inactive
+ * Inactive buyers segment
  */
 const getInactiveCustomers = async (req, res, next) => {
-  try {
-    const filter = { daysSinceLastPurchase: { $gte: 90 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Inactive customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { daysSinceLastPurchase: { $gte: 30 }, isDeleted: { $ne: true } }, 'Inactive buyers segment fetched successfully');
 };
 
 /**
- * Fetch customers writing the most reviews (productReviewsWritten >= 5)
- * @route GET /api/v1/customers/top-reviewers
+ * Top customer reviewers segment
  */
 const getTopReviewers = async (req, res, next) => {
-  try {
-    const filter = { productReviewsWritten: { $gte: 5 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Top reviewers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { productReviewsWritten: { $gte: 3 }, isDeleted: { $ne: true } }, 'Top customer reviewers segment fetched successfully');
 };
 
 /**
- * Fetch customers with high cart abandonment rate (cartAbandonmentRate >= 80)
- * @route GET /api/v1/customers/high-cart-abandonment
+ * High cart abandonment segment
  */
 const getHighCartAbandonmentCustomers = async (req, res, next) => {
-  try {
-    const filter = { cartAbandonmentRate: { $gte: 80 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'High cart abandonment customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { cartAbandonmentRate: { $gte: 50 }, isDeleted: { $ne: true } }, 'High cart abandonment rate segment fetched successfully');
 };
 
 /**
- * Fetch customers with frequent logins (loginFrequency >= 12)
- * @route GET /api/v1/customers/frequent-logins
+ * Frequent login segment
  */
 const getFrequentLoginsCustomers = async (req, res, next) => {
-  try {
-    const filter = { loginFrequency: { $gte: 12 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Frequent login customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { loginFrequency: { $gte: 20 }, isDeleted: { $ne: true } }, 'Frequent login customers segment fetched successfully');
 };
 
 /**
- * Fetch loyal customers (membershipYears >= 3)
- * @route GET /api/v1/customers/loyal
+ * Loyal segment
  */
 const getLoyalCustomers = async (req, res, next) => {
-  try {
-    const filter = { membershipYears: { $gte: 3 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Loyal customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { membershipYears: { $gte: 4 }, isDeleted: { $ne: true } }, 'Loyal customer segment fetched successfully');
 };
 
 /**
- * Fetch premium customers (lifetimeValue >= 1500)
- * @route GET /api/v1/customers/premium
+ * Premium segment
  */
 const getPremiumCustomers = async (req, res, next) => {
-  try {
-    const filter = { lifetimeValue: { $gte: 1500 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Premium customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { lifetimeValue: { $gte: 2000 }, creditBalance: { $gte: 500 }, isDeleted: { $ne: true } }, 'Premium customer analytics segment fetched successfully');
 };
 
 /**
- * Fetch recently active customers (daysSinceLastPurchase <= 14)
- * @route GET /api/v1/customers/recent
+ * Recent customers segment
  */
 const getRecentCustomers = async (req, res, next) => {
-  try {
-    const filter = { daysSinceLastPurchase: { $lte: 14 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Recently active customers fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { membershipYears: { $lt: 1 }, isDeleted: { $ne: true } }, 'Recently active customers segment fetched successfully');
 };
 
 /**
- * Fetch customers sorted by age descending (oldest first)
- * @route GET /api/v1/customers/sort/age-desc
+ * Sorting Age Desc
  */
 const getCustomersSortedByAgeDesc = async (req, res, next) => {
-  try {
-    const filter = { isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = '-age';
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers sorted by age descending fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  req.query.sort = '-age';
+  await getCustomers(req, res, next);
 };
 
 /**
- * Fetch customers sorted by purchases descending (highest purchasers first)
- * @route GET /api/v1/customers/sort/purchases-desc
+ * Sorting Purchases Desc
  */
 const getCustomersSortedByPurchasesDesc = async (req, res, next) => {
-  try {
-    const filter = { isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = '-purchases';
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers sorted by purchases descending fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  req.query.sort = '-purchases';
+  await getCustomers(req, res, next);
 };
 
 /**
- * Fetch customers sorted by lifetime value descending (highest LTV first)
- * @route GET /api/v1/customers/sort/lifetime-desc
+ * Sorting Lifetime Desc
  */
 const getCustomersSortedByLifetimeDesc = async (req, res, next) => {
-  try {
-    const filter = { isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = '-lifetimeValue';
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers sorted by lifetime value descending fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  req.query.sort = '-lifetimeValue';
+  await getCustomers(req, res, next);
 };
 
 /**
- * Fetch customers sorted by login frequency descending (most active first)
- * @route GET /api/v1/customers/sort/login-desc
+ * Sorting Logins Desc
  */
 const getCustomersSortedByLoginDesc = async (req, res, next) => {
-  try {
-    const filter = { isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = '-loginFrequency';
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers sorted by login frequency descending fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  req.query.sort = '-loginFrequency';
+  await getCustomers(req, res, next);
 };
 
 /**
- * Fetch customers sorted by credit balance descending (highest credit balance first)
- * @route GET /api/v1/customers/sort/credit-desc
+ * Sorting Credit Desc
  */
 const getCustomersSortedByCreditDesc = async (req, res, next) => {
-  try {
-    const filter = { isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = '-creditBalance';
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers sorted by credit balance descending fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  req.query.sort = '-creditBalance';
+  await getCustomers(req, res, next);
 };
 
-/**
- * Fetch customers filtered by high purchases (purchases >= 10)
- * @route GET /api/v1/customers/filter/high-purchases
- */
+// Filter shortcuts
 const getFilteredHighPurchases = async (req, res, next) => {
-  try {
-    const filter = { purchases: { $gte: 10 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high purchases fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { purchases: { $gte: 10 }, isDeleted: { $ne: true } }, 'High purchases filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by high lifetime value (lifetimeValue >= 1000)
- * @route GET /api/v1/customers/filter/high-lifetime
- */
 const getFilteredHighLifetime = async (req, res, next) => {
-  try {
-    const filter = { lifetimeValue: { $gte: 1000 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high lifetime value fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { lifetimeValue: { $gte: 1000 }, isDeleted: { $ne: true } }, 'High lifetime filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by high credit balance (creditBalance >= 2000)
- * @route GET /api/v1/customers/filter/high-credit
- */
 const getFilteredHighCredit = async (req, res, next) => {
-  try {
-    const filter = { creditBalance: { $gte: 2000 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high credit balance fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { creditBalance: { $gte: 2000 }, isDeleted: { $ne: true } }, 'High credit filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by high login frequency (loginFrequency >= 12)
- * @route GET /api/v1/customers/filter/high-login
- */
 const getFilteredHighLogin = async (req, res, next) => {
-  try {
-    const filter = { loginFrequency: { $gte: 12 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high login frequency fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { loginFrequency: { $gte: 15 }, isDeleted: { $ne: true } }, 'High login filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by high mobile usage (mobileUsage >= 20)
- * @route GET /api/v1/customers/filter/high-mobile
- */
 const getFilteredHighMobile = async (req, res, next) => {
-  try {
-    const filter = { mobileUsage: { $gte: 20 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high mobile usage fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { mobileUsage: { $gte: 15 }, isDeleted: { $ne: true } }, 'High mobile app filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by high discount rate (discountRate >= 40)
- * @route GET /api/v1/customers/filter/high-discount
- */
 const getFilteredHighDiscount = async (req, res, next) => {
-  try {
-    const filter = { discountRate: { $gte: 40 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high discount rate fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { discountRate: { $gte: 20 }, isDeleted: { $ne: true } }, 'High discount filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by high cart abandonment rate (cartAbandonmentRate >= 80)
- * @route GET /api/v1/customers/filter/high-cart-abandonment
- */
 const getFilteredHighCartAbandonment = async (req, res, next) => {
-  try {
-    const filter = { cartAbandonmentRate: { $gte: 80 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high cart abandonment rate fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { cartAbandonmentRate: { $gte: 50 }, isDeleted: { $ne: true } }, 'High cart abandonment filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by high engagement (loginFrequency >= 15 AND sessionDuration >= 30)
- * @route GET /api/v1/customers/filter/high-engagement
- */
 const getFilteredHighEngagement = async (req, res, next) => {
-  try {
-    const filter = { 
-      loginFrequency: { $gte: 15 }, 
-      sessionDuration: { $gte: 30 }, 
-      isDeleted: { $ne: true } 
-    };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high engagement fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  const filter = { loginFrequency: { $gte: 15 }, sessionDuration: { $gte: 30 }, isDeleted: { $ne: true } };
+  await queryAndRespond(req, res, next, filter, 'High engagement filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by high reviews written (productReviewsWritten >= 5)
- * @route GET /api/v1/customers/filter/high-reviews
- */
 const getFilteredHighReviews = async (req, res, next) => {
-  try {
-    const filter = { productReviewsWritten: { $gte: 5 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high review count fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { productReviewsWritten: { $gte: 3 }, isDeleted: { $ne: true } }, 'High product reviews filtered fetched successfully');
 };
 
-/**
- * Fetch churned customers filtered (churned === 1)
- * @route GET /api/v1/customers/filter/churned
- */
 const getFilteredChurned = async (req, res, next) => {
-  try {
-    const filter = { churned: 1, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Churned customers filtered fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { churned: 1, isDeleted: { $ne: true } }, 'Churned filtered fetched successfully');
 };
 
-/**
- * Fetch active customers filtered (churned === 0)
- * @route GET /api/v1/customers/filter/active
- */
 const getFilteredActive = async (req, res, next) => {
-  try {
-    const filter = { churned: 0, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Active customers filtered fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { churned: 0, isDeleted: { $ne: true } }, 'Active filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by low session duration (sessionDuration <= 10)
- * @route GET /api/v1/customers/filter/low-session
- */
 const getFilteredLowSession = async (req, res, next) => {
-  try {
-    const filter = { sessionDuration: { $lte: 10 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by low session duration fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { sessionDuration: { $lt: 20 }, isDeleted: { $ne: true } }, 'Low session duration filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by high session duration (sessionDuration >= 40)
- * @route GET /api/v1/customers/filter/high-session
- */
 const getFilteredHighSession = async (req, res, next) => {
-  try {
-    const filter = { sessionDuration: { $gte: 40 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high session duration fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { sessionDuration: { $gte: 40 }, isDeleted: { $ne: true } }, 'High session duration filtered fetched successfully');
 };
 
-/**
- * Fetch customers filtered by high order value (averageOrderValue >= 150)
- * @route GET /api/v1/customers/filter/high-order-value
- */
 const getFilteredHighOrderValue = async (req, res, next) => {
-  try {
-    const filter = { averageOrderValue: { $gte: 150 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Customers filtered by high order value fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { averageOrderValue: { $gte: 150 }, isDeleted: { $ne: true } }, 'High average order value filtered fetched successfully');
 };
 
-/**
- * Fetch loyal customers filtered (membershipYears >= 3)
- * @route GET /api/v1/customers/filter/loyal
- */
 const getFilteredLoyal = async (req, res, next) => {
-  try {
-    const filter = { membershipYears: { $gte: 3 }, isDeleted: { $ne: true } };
-    const { page, limit, skip } = getPaginationParams(req.query);
-    const sort = req.query.sort;
-
-    const { data, totalCount } = await customerService.getCustomers(filter, sort, limit, skip);
-    const pagination = buildPaginationMetadata(totalCount, page, limit);
-
-    return ApiResponse.success(res, 'Loyal customers filtered fetched successfully', {
-      customers: data,
-      pagination,
-    });
-  } catch (error) {
-    next(error);
-  }
+  await queryAndRespond(req, res, next, { membershipYears: { $gte: 3 }, isDeleted: { $ne: true } }, 'Loyal customers filtered fetched successfully');
 };
 
 /**
@@ -1271,26 +817,30 @@ const getFilteredLoyal = async (req, res, next) => {
 const importJson = async (req, res, next) => {
   try {
     let filePath;
-    
     if (req.file) {
       filePath = req.file.path;
     } else if (req.body.filePath) {
       filePath = req.body.filePath;
     } else {
-      return ApiResponse.error(res, 'Please upload a JSON file or provide a local filePath.', null, 400);
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload a JSON file or provide a local filePath.'
+      });
     }
 
     console.log(`Starting import from: ${filePath}`);
     const count = await seedDatabase(filePath);
 
-    // Clean up uploaded temp file
     if (req.file && fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
-    return ApiResponse.success(res, `Successfully imported ${count} customer records from JSON.`, { count }, 201);
+    return res.status(201).json({
+      success: true,
+      message: `Successfully imported ${count} customer records from JSON.`,
+      data: { count }
+    });
   } catch (error) {
-    // Clean up uploaded temp file in case of error
     if (req.file && fs.existsSync(req.file.path)) {
       try {
         fs.unlinkSync(req.file.path);
@@ -1305,10 +855,14 @@ const importJson = async (req, res, next) => {
  */
 const clearCache = async (req, res, next) => {
   try {
-    return ApiResponse.success(res, 'Application analytics query cache cleared successfully.', {
-      cleared: true,
-      cacheKeysRemoved: 0,
-      timestamp: new Date(),
+    return res.status(200).json({
+      success: true,
+      message: 'Application analytics query cache cleared successfully.',
+      data: {
+        cleared: true,
+        cacheKeysRemoved: 0,
+        timestamp: new Date()
+      }
     });
   } catch (error) {
     next(error);
@@ -1375,5 +929,5 @@ module.exports = {
   getFilteredHighOrderValue,
   getFilteredLoyal,
   importJson,
-  clearCache,
+  clearCache
 };
