@@ -1,7 +1,5 @@
 const jwt = require('jsonwebtoken');
 const { User, Customer } = require('../models');
-const statsService = require('../services/statsService');
-const analyticsService = require('../services/analyticsService');
 
 // Inline helper to get pagination offsets
 const getPaginationParams = (queryParams) => {
@@ -242,12 +240,37 @@ const getJwtProfile = async (req, res, next) => {
  */
 const getJwtDashboard = async (req, res, next) => {
   try {
-    const totalCustomers = await statsService.getCustomerCount();
-    const averageAge = await statsService.getAverageAge();
-    const averageLifetimeValue = await statsService.getAverageLifetimeValue();
-    const averageCreditBalance = await statsService.getAverageCreditBalance();
-    const averageOrderValue = await statsService.getAverageOrderValue();
-    const churnCounts = await statsService.getChurnCounts();
+    const totalCustomers = await Customer.countDocuments({ isDeleted: { $ne: true } });
+
+    const avgAgeRes = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, averageAge: { $avg: '$age' } } }
+    ]);
+    const averageAge = avgAgeRes.length > 0 ? avgAgeRes[0].averageAge : 0;
+
+    const avgLtvRes = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, averageLtv: { $avg: '$lifetimeValue' } } }
+    ]);
+    const averageLifetimeValue = avgLtvRes.length > 0 ? avgLtvRes[0].averageLtv : 0;
+
+    const avgCreditRes = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, averageCredit: { $avg: '$creditBalance' } } }
+    ]);
+    const averageCreditBalance = avgCreditRes.length > 0 ? avgCreditRes[0].averageCredit : 0;
+
+    const avgOovRes = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, averageOov: { $avg: '$averageOrderValue' } } }
+    ]);
+    const averageOrderValue = avgOovRes.length > 0 ? avgOovRes[0].averageOov : 0;
+
+    const churnCounts = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: '$churned', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -299,11 +322,21 @@ const getPrivateCustomers = async (req, res, next) => {
  */
 const getPrivateStats = async (req, res, next) => {
   try {
-    const highestPurchases = await statsService.getHighestPurchasesCustomer();
-    const highestLifetime = await statsService.getHighestLifetimeCustomer();
-    const highestCredit = await statsService.getHighestCreditCustomer();
-    const totalReviewCount = await statsService.getTotalReviewCount();
-    const averageMobileUsage = await statsService.getAverageMobileUsage();
+    const highestPurchases = await Customer.findOne({ isDeleted: { $ne: true } }).sort({ purchases: -1 });
+    const highestLifetime = await Customer.findOne({ isDeleted: { $ne: true } }).sort({ lifetimeValue: -1 });
+    const highestCredit = await Customer.findOne({ isDeleted: { $ne: true } }).sort({ creditBalance: -1 });
+
+    const totalReviewCountRes = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, totalReviews: { $sum: '$productReviewsWritten' } } }
+    ]);
+    const totalReviewCount = totalReviewCountRes.length > 0 ? totalReviewCountRes[0].totalReviews : 0;
+
+    const averageMobileUsageRes = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, averageMobileUsage: { $avg: '$mobileUsage' } } }
+    ]);
+    const averageMobileUsage = averageMobileUsageRes.length > 0 ? averageMobileUsageRes[0].averageMobileUsage : 0;
 
     return res.status(200).json({
       success: true,
@@ -352,8 +385,49 @@ const getAdminData = async (req, res, next) => {
  */
 const getCustomerInsights = async (req, res, next) => {
   try {
-    const churnAnalysis = await analyticsService.getChurnAnalysis();
-    const retentionAnalysis = await analyticsService.getRetentionAnalysis();
+    const churnAnalysis = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      {
+        $group: {
+          _id: '$churned',
+          count: { $sum: 1 },
+          averageAge: { $avg: '$age' },
+          averageLifetimeValue: { $avg: '$lifetimeValue' },
+          averageLoginFrequency: { $avg: '$loginFrequency' },
+          averageCustomerServiceCalls: { $avg: '$customerServiceCalls' },
+          averageCartAbandonmentRate: { $avg: '$cartAbandonmentRate' },
+          averageDiscountRate: { $avg: '$discountRate' }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    const retentionAnalysis = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      {
+        $group: {
+          _id: '$signupQuarter',
+          totalCustomers: { $sum: 1 },
+          churnedCount: { $sum: { $cond: [{ $eq: ['$churned', 1] }, 1, 0] } },
+          activeCount: { $sum: { $cond: [{ $eq: ['$churned', 0] }, 1, 0] } },
+          activeRate: { $avg: { $cond: [{ $eq: ['$churned', 0] }, 1, 0] } },
+          averageLifetimeValue: { $avg: '$lifetimeValue' },
+          averagePurchases: { $avg: '$purchases' }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          totalCustomers: 1,
+          churnedCount: 1,
+          activeCount: 1,
+          retentionRate: { $multiply: ['$activeRate', 100] },
+          averageLifetimeValue: 1,
+          averagePurchases: 1
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
 
     return res.status(200).json({
       success: true,

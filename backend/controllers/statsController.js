@@ -1,5 +1,4 @@
-const ApiResponse = require('../utils/apiResponse');
-const statsService = require('../services/statsService');
+const { Customer } = require('../models');
 
 /**
  * Fetch total customer count
@@ -7,8 +6,12 @@ const statsService = require('../services/statsService');
  */
 const getCustomerCount = async (req, res, next) => {
   try {
-    const count = await statsService.getCustomerCount();
-    return ApiResponse.success(res, 'Total customer count fetched successfully', { count });
+    const count = await Customer.countDocuments({ isDeleted: { $ne: true } });
+    return res.status(200).json({
+      success: true,
+      message: 'Total customer count fetched successfully',
+      data: { count }
+    });
   } catch (error) {
     next(error);
   }
@@ -20,9 +23,17 @@ const getCustomerCount = async (req, res, next) => {
  */
 const getAverageAge = async (req, res, next) => {
   try {
-    const averageAge = await statsService.getAverageAge();
-    return ApiResponse.success(res, 'Average customer age fetched successfully', { 
-      averageAge: Math.round(averageAge * 100) / 100 
+    const result = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, averageAge: { $avg: '$age' } } }
+    ]);
+    const averageAge = result.length > 0 ? result[0].averageAge : 0;
+    return res.status(200).json({
+      success: true,
+      message: 'Average customer age fetched successfully',
+      data: {
+        averageAge: Math.round(averageAge * 100) / 100
+      }
     });
   } catch (error) {
     next(error);
@@ -35,9 +46,17 @@ const getAverageAge = async (req, res, next) => {
  */
 const getAverageLifetimeValue = async (req, res, next) => {
   try {
-    const averageLifetimeValue = await statsService.getAverageLifetimeValue();
-    return ApiResponse.success(res, 'Average customer lifetime value fetched successfully', { 
-      averageLifetimeValue: Math.round(averageLifetimeValue * 100) / 100 
+    const result = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, averageLtv: { $avg: '$lifetimeValue' } } }
+    ]);
+    const averageLifetimeValue = result.length > 0 ? result[0].averageLtv : 0;
+    return res.status(200).json({
+      success: true,
+      message: 'Average customer lifetime value fetched successfully',
+      data: {
+        averageLifetimeValue: Math.round(averageLifetimeValue * 100) / 100
+      }
     });
   } catch (error) {
     next(error);
@@ -50,9 +69,17 @@ const getAverageLifetimeValue = async (req, res, next) => {
  */
 const getAverageCreditBalance = async (req, res, next) => {
   try {
-    const averageCreditBalance = await statsService.getAverageCreditBalance();
-    return ApiResponse.success(res, 'Average customer credit balance fetched successfully', { 
-      averageCreditBalance: Math.round(averageCreditBalance * 100) / 100 
+    const result = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, averageCredit: { $avg: '$creditBalance' } } }
+    ]);
+    const averageCreditBalance = result.length > 0 ? result[0].averageCredit : 0;
+    return res.status(200).json({
+      success: true,
+      message: 'Average customer credit balance fetched successfully',
+      data: {
+        averageCreditBalance: Math.round(averageCreditBalance * 100) / 100
+      }
     });
   } catch (error) {
     next(error);
@@ -65,9 +92,17 @@ const getAverageCreditBalance = async (req, res, next) => {
  */
 const getAverageOrderValue = async (req, res, next) => {
   try {
-    const averageOrderValue = await statsService.getAverageOrderValue();
-    return ApiResponse.success(res, 'Average customer order value fetched successfully', { 
-      averageOrderValue: Math.round(averageOrderValue * 100) / 100 
+    const result = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, averageOov: { $avg: '$averageOrderValue' } } }
+    ]);
+    const averageOrderValue = result.length > 0 ? result[0].averageOov : 0;
+    return res.status(200).json({
+      success: true,
+      message: 'Average customer order value fetched successfully',
+      data: {
+        averageOrderValue: Math.round(averageOrderValue * 100) / 100
+      }
     });
   } catch (error) {
     next(error);
@@ -80,11 +115,18 @@ const getAverageOrderValue = async (req, res, next) => {
  */
 const getHighestPurchasesCustomer = async (req, res, next) => {
   try {
-    const customer = await statsService.getHighestPurchasesCustomer();
+    const customer = await Customer.findOne({ isDeleted: { $ne: true } }).sort({ purchases: -1 });
     if (!customer) {
-      return ApiResponse.error(res, 'No customers found', null, 404);
+      return res.status(404).json({
+        success: false,
+        message: 'No customers found'
+      });
     }
-    return ApiResponse.success(res, 'Customer with highest purchases fetched successfully', customer);
+    return res.status(200).json({
+      success: true,
+      message: 'Customer with highest purchases fetched successfully',
+      data: customer
+    });
   } catch (error) {
     next(error);
   }
@@ -96,11 +138,18 @@ const getHighestPurchasesCustomer = async (req, res, next) => {
  */
 const getHighestLifetimeCustomer = async (req, res, next) => {
   try {
-    const customer = await statsService.getHighestLifetimeCustomer();
+    const customer = await Customer.findOne({ isDeleted: { $ne: true } }).sort({ lifetimeValue: -1 });
     if (!customer) {
-      return ApiResponse.error(res, 'No customers found', null, 404);
+      return res.status(404).json({
+        success: false,
+        message: 'No customers found'
+      });
     }
-    return ApiResponse.success(res, 'Customer with highest lifetime value fetched successfully', customer);
+    return res.status(200).json({
+      success: true,
+      message: 'Customer with highest lifetime value fetched successfully',
+      data: customer
+    });
   } catch (error) {
     next(error);
   }
@@ -112,11 +161,18 @@ const getHighestLifetimeCustomer = async (req, res, next) => {
  */
 const getHighestCreditCustomer = async (req, res, next) => {
   try {
-    const customer = await statsService.getHighestCreditCustomer();
+    const customer = await Customer.findOne({ isDeleted: { $ne: true } }).sort({ creditBalance: -1 });
     if (!customer) {
-      return ApiResponse.error(res, 'No customers found', null, 404);
+      return res.status(404).json({
+        success: false,
+        message: 'No customers found'
+      });
     }
-    return ApiResponse.success(res, 'Customer with highest credit balance fetched successfully', customer);
+    return res.status(200).json({
+      success: true,
+      message: 'Customer with highest credit balance fetched successfully',
+      data: customer
+    });
   } catch (error) {
     next(error);
   }
@@ -128,8 +184,16 @@ const getHighestCreditCustomer = async (req, res, next) => {
  */
 const getCountryCounts = async (req, res, next) => {
   try {
-    const counts = await statsService.getCountryCounts();
-    return ApiResponse.success(res, 'Country customer counts fetched successfully', counts);
+    const counts = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: '$country', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    return res.status(200).json({
+      success: true,
+      message: 'Country customer counts fetched successfully',
+      data: counts
+    });
   } catch (error) {
     next(error);
   }
@@ -141,8 +205,16 @@ const getCountryCounts = async (req, res, next) => {
  */
 const getCityCounts = async (req, res, next) => {
   try {
-    const counts = await statsService.getCityCounts();
-    return ApiResponse.success(res, 'City customer counts fetched successfully', counts);
+    const counts = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: '$city', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    return res.status(200).json({
+      success: true,
+      message: 'City customer counts fetched successfully',
+      data: counts
+    });
   } catch (error) {
     next(error);
   }
@@ -154,8 +226,16 @@ const getCityCounts = async (req, res, next) => {
  */
 const getGenderCounts = async (req, res, next) => {
   try {
-    const counts = await statsService.getGenderCounts();
-    return ApiResponse.success(res, 'Gender customer counts fetched successfully', counts);
+    const counts = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: '$gender', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    return res.status(200).json({
+      success: true,
+      message: 'Gender customer counts fetched successfully',
+      data: counts
+    });
   } catch (error) {
     next(error);
   }
@@ -167,8 +247,16 @@ const getGenderCounts = async (req, res, next) => {
  */
 const getChurnCounts = async (req, res, next) => {
   try {
-    const counts = await statsService.getChurnCounts();
-    return ApiResponse.success(res, 'Churn status customer counts fetched successfully', counts);
+    const counts = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: '$churned', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    return res.status(200).json({
+      success: true,
+      message: 'Churn status customer counts fetched successfully',
+      data: counts
+    });
   } catch (error) {
     next(error);
   }
@@ -180,8 +268,16 @@ const getChurnCounts = async (req, res, next) => {
  */
 const getSignupQuarterCounts = async (req, res, next) => {
   try {
-    const counts = await statsService.getSignupQuarterCounts();
-    return ApiResponse.success(res, 'Signup quarter customer counts fetched successfully', counts);
+    const counts = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: '$signupQuarter', count: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
+    ]);
+    return res.status(200).json({
+      success: true,
+      message: 'Signup quarter customer counts fetched successfully',
+      data: counts
+    });
   } catch (error) {
     next(error);
   }
@@ -193,8 +289,16 @@ const getSignupQuarterCounts = async (req, res, next) => {
  */
 const getTotalReviewCount = async (req, res, next) => {
   try {
-    const count = await statsService.getTotalReviewCount();
-    return ApiResponse.success(res, 'Total customer review count fetched successfully', { count });
+    const result = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, totalReviews: { $sum: '$productReviewsWritten' } } }
+    ]);
+    const count = result.length > 0 ? result[0].totalReviews : 0;
+    return res.status(200).json({
+      success: true,
+      message: 'Total customer review count fetched successfully',
+      data: { count }
+    });
   } catch (error) {
     next(error);
   }
@@ -206,9 +310,17 @@ const getTotalReviewCount = async (req, res, next) => {
  */
 const getAverageMobileUsage = async (req, res, next) => {
   try {
-    const averageMobileUsage = await statsService.getAverageMobileUsage();
-    return ApiResponse.success(res, 'Average customer mobile usage fetched successfully', { 
-      averageMobileUsage: Math.round(averageMobileUsage * 100) / 100 
+    const result = await Customer.aggregate([
+      { $match: { isDeleted: { $ne: true } } },
+      { $group: { _id: null, averageMobileUsage: { $avg: '$mobileUsage' } } }
+    ]);
+    const averageMobileUsage = result.length > 0 ? result[0].averageMobileUsage : 0;
+    return res.status(200).json({
+      success: true,
+      message: 'Average customer mobile usage fetched successfully',
+      data: {
+        averageMobileUsage: Math.round(averageMobileUsage * 100) / 100
+      }
     });
   } catch (error) {
     next(error);
