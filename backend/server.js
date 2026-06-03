@@ -6,7 +6,6 @@ const connectDB = require('./config/database');
 const loggingMiddleware = require('./middlewares/loggingMiddleware');
 const errorHandler = require('./middlewares/errorMiddleware');
 const apiRouter = require('./routes');
-const ApiResponse = require('./utils/apiResponse');
 
 // Initialize express app
 const app = express();

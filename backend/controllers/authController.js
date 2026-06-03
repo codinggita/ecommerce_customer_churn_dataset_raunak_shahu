@@ -11,10 +11,10 @@ const register = async (req, res, next) => {
     const { name, email, password, role } = req.body;
 
     // Beginner inline input validation
-    if (!name || !email || !password) {
+    if (!name || !email || !password || password.length < 6) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide name, email, and password'
+        message: 'Please provide name, email, and a password of at least 6 characters'
       });
     }
 
@@ -260,10 +260,10 @@ const forgotPassword = async (req, res, next) => {
 const resetPassword = async (req, res, next) => {
   try {
     const { token, newPassword } = req.body;
-    if (!token || !newPassword) {
+    if (!token || !newPassword || newPassword.length < 6) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide token and new password'
+        message: 'Please provide token and new password (min 6 characters)'
       });
     }
 
@@ -304,10 +304,10 @@ const resetPassword = async (req, res, next) => {
 const changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) {
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide current password and new password'
+        message: 'Please provide current password and new password (min 6 characters)'
       });
     }
 
@@ -388,10 +388,10 @@ const sendOtp = async (req, res, next) => {
 const verifyOtp = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
-    if (!email || !otp) {
+    if (!email || !otp || otp.length !== 6) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide email and otp'
+        message: 'Please provide email and exactly 6-digit OTP'
       });
     }
 

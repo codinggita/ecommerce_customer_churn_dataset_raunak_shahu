@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const ApiResponse = require('../utils/apiResponse');
 const constants = require('../config/constants');
 const upload = require('../middlewares/uploadMiddleware');
 const customerController = require('../controllers/customerController');
@@ -14,10 +13,14 @@ const customerController = require('../controllers/customerController');
  * @access  Public
  */
 router.get('/system/health', (req, res) => {
-  return ApiResponse.success(res, 'API is healthy', {
-    status: 'UP',
-    timestamp: new Date(),
-    uptime: process.uptime(),
+  return res.status(200).json({
+    success: true,
+    message: 'API is healthy',
+    data: {
+      status: 'UP',
+      timestamp: new Date(),
+      uptime: process.uptime(),
+    }
   });
 });
 
@@ -27,9 +30,13 @@ router.get('/system/health', (req, res) => {
  * @access  Public
  */
 router.get('/system/version', (req, res) => {
-  return ApiResponse.success(res, 'API version details fetched successfully', {
-    version: constants.API_VERSION,
-    environment: process.env.NODE_ENV || 'development',
+  return res.status(200).json({
+    success: true,
+    message: 'API version details fetched successfully',
+    data: {
+      version: constants.API_VERSION,
+      environment: process.env.NODE_ENV || 'development',
+    }
   });
 });
 
@@ -39,10 +46,14 @@ router.get('/system/version', (req, res) => {
  * @access  Public
  */
 router.get('/system/config', (req, res) => {
-  return ApiResponse.success(res, 'Public configuration details fetched successfully', {
-    corsOrigin: process.env.CORS_ORIGIN || '*',
-    env: process.env.NODE_ENV || 'development',
-    debugMode: process.env.DEBUG_MODE === 'true',
+  return res.status(200).json({
+    success: true,
+    message: 'Public configuration details fetched successfully',
+    data: {
+      corsOrigin: process.env.CORS_ORIGIN || '*',
+      env: process.env.NODE_ENV || 'development',
+      debugMode: process.env.DEBUG_MODE === 'true',
+    }
   });
 });
 
