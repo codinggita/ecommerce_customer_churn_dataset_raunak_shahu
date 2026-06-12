@@ -1,5 +1,3 @@
-const ApiResponse = require('../utils/apiResponse');
-
 /**
  * Global Error Handler Middleware
  */
@@ -15,19 +13,31 @@ const errorHandler = (err, req, res, next) => {
 
   // Custom formatting for specific mongoose/validation errors if any
   if (err.name === 'ValidationError') {
-    return ApiResponse.error(res, 'Validation Error', err.errors, 400);
+    return res.status(400).json({
+      success: false,
+      message: 'Validation Error',
+      errors: err.errors
+    });
   }
   
   if (err.code === 11000) {
-    return ApiResponse.error(res, 'Duplicate key error', err.keyValue, 400);
+    return res.status(400).json({
+      success: false,
+      message: 'Duplicate key error',
+      errors: err.keyValue
+    });
   }
 
-  const payload = process.env.NODE_ENV === 'development' ? {
+  const details = process.env.NODE_ENV === 'development' ? {
     stack: err.stack,
     details: errors
   } : errors;
 
-  return ApiResponse.error(res, message, payload, statusCode);
+  return res.status(statusCode).json({
+    success: false,
+    message,
+    errors: details
+  });
 };
 
 module.exports = errorHandler;

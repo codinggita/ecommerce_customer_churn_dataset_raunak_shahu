@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const ApiResponse = require('../utils/apiResponse');
 const { User } = require('../models');
 
 /**
@@ -24,22 +23,34 @@ const protect = async (req, res, next) => {
       const user = await User.findById(decoded.id);
 
       if (!user) {
-        return ApiResponse.error(res, 'Not authorized, user not found', null, 401);
+        return res.status(401).json({
+          success: false,
+          message: 'Not authorized, user not found'
+        });
       }
 
       if (user.isDeleted) {
-        return ApiResponse.error(res, 'Not authorized, user account has been deleted', null, 401);
+        return res.status(401).json({
+          success: false,
+          message: 'Not authorized, user account has been deleted'
+        });
       }
 
       req.user = user;
       next();
     } catch (error) {
-      return ApiResponse.error(res, 'Not authorized, token failed', null, 401);
+      return res.status(401).json({
+        success: false,
+        message: 'Not authorized, token failed'
+      });
     }
   }
 
   if (!token) {
-    return ApiResponse.error(res, 'Not authorized, no token provided', null, 401);
+    return res.status(401).json({
+      success: false,
+      message: 'Not authorized, no token provided'
+    });
   }
 };
 
@@ -50,12 +61,10 @@ const protect = async (req, res, next) => {
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
-      return ApiResponse.error(
-        res,
-        `User role '${req.user ? req.user.role : 'Guest'}' is not authorized to access this resource`,
-        null,
-        403
-      );
+      return res.status(403).json({
+        success: false,
+        message: `User role '${req.user ? req.user.role : 'Guest'}' is not authorized to access this resource`
+      });
     }
     next();
   };

@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const jwtController = require('../controllers/jwtController');
-const { authValidation } = require('../validations');
-const validate = require('../middlewares/validationMiddleware');
 const { protect, authorize } = require('../middlewares/authMiddleware');
 
 /**
@@ -10,14 +8,14 @@ const { protect, authorize } = require('../middlewares/authMiddleware');
  * @desc    Verify if JWT token is valid
  * @access  Public
  */
-router.post('/verify-token', authValidation.validateVerifyToken, validate, jwtController.verifyToken);
+router.post('/verify-token', jwtController.verifyToken);
 
 /**
  * @route   POST /api/v1/jwt/refresh-token
  * @desc    Get new JWT token using existing valid token
  * @access  Public
  */
-router.post('/refresh-token', authValidation.validateRefreshToken, validate, jwtController.refreshToken);
+router.post('/refresh-token', jwtController.refreshToken);
 
 /**
  * @route   GET /api/v1/jwt/profile

@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const ApiResponse = require('../utils/apiResponse');
 
 // Custom request timing middleware local to these practice routes
 router.use((req, res, next) => {
@@ -15,11 +14,15 @@ router.use((req, res, next) => {
  */
 router.get('/logger', (req, res) => {
   console.log(`[Practice Logger] Logger middleware route hit: ${req.method} ${req.originalUrl}`);
-  return ApiResponse.success(res, 'Practice request logging middleware verified successfully', {
-    logged: true,
-    method: req.method,
-    url: req.originalUrl,
-    timestamp: new Date(),
+  return res.status(200).json({
+    success: true,
+    message: 'Practice request logging middleware verified successfully',
+    data: {
+      logged: true,
+      method: req.method,
+      url: req.originalUrl,
+      timestamp: new Date()
+    }
   });
 });
 
@@ -30,10 +33,14 @@ router.get('/logger', (req, res) => {
  */
 router.get('/request-time', (req, res) => {
   const duration = new Date() - req.requestTime;
-  return ApiResponse.success(res, 'Practice request timing middleware verified successfully', {
-    requestStartTime: req.requestTime,
-    durationMs: duration,
-    formattedDuration: `${duration}ms`,
+  return res.status(200).json({
+    success: true,
+    message: 'Practice request timing middleware verified successfully',
+    data: {
+      requestStartTime: req.requestTime,
+      durationMs: duration,
+      formattedDuration: `${duration}ms`
+    }
   });
 });
 
