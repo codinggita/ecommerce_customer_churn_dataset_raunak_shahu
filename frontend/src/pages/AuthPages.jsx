@@ -3,16 +3,21 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, Typography, TextField, Button, Box, Alert, Stack } from '@mui/material';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../store/slices';
 
 export function Login() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleMockLogin = (role) => {
-    localStorage.setItem('token', 'mock_jwt_token_for_' + role.toLowerCase());
-    localStorage.setItem('user', JSON.stringify({
-      name: `Demo ${role}`,
-      email: `${role.toLowerCase()}@demo.com`,
-      role: role
+    dispatch(setCredentials({
+      token: 'mock_jwt_token_for_' + role.toLowerCase(),
+      user: {
+        name: `Demo ${role}`,
+        email: `${role.toLowerCase()}@demo.com`,
+        role: role
+      }
     }));
     navigate('/');
   };

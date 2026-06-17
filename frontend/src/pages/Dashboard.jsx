@@ -7,18 +7,18 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import { useThemeMode } from '../App';
+import { useSelector, useDispatch } from 'react-redux';
+import { clearCredentials } from '../store/slices';
 
 function Dashboard() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { mode, toggleTheme } = useThemeMode();
   
-  const token = localStorage.getItem('token');
-  const userString = localStorage.getItem('user');
-  const user = userString ? JSON.parse(userString) : { name: 'Guest', email: 'guest@demo.com', role: 'User' };
+  const { user } = useSelector((state) => state.auth);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    dispatch(clearCredentials());
     navigate('/login');
   };
 

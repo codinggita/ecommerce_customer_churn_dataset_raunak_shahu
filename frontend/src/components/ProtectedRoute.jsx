@@ -1,17 +1,10 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const location = useLocation();
-  const token = localStorage.getItem('token');
-  const userString = localStorage.getItem('user');
-  
-  let user = null;
-  try {
-    user = userString ? JSON.parse(userString) : null;
-  } catch (error) {
-    console.error("Failed to parse user from localStorage", error);
-  }
+  const { token, user } = useSelector((state) => state.auth);
 
   // Not authenticated: redirect to login
   if (!token || !user) {
