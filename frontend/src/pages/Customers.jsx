@@ -10,10 +10,13 @@ import PeopleIcon from '@mui/icons-material/People';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
 import ClearIcon from '@mui/icons-material/Clear';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import api from '../utils/api';
 import DashboardLayout from '../components/DashboardLayout';
+import CustomerModal from '../components/CustomerModal';
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -48,13 +51,15 @@ export default function Customers() {
   // Selection state for bulk deletion
   const [selected, setSelected] = useState([]);
 
+  // CRUD Modal States
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const sortParam = order === 'desc' ? `-${orderBy}` : orderBy;
-      
-      // Select API endpoint depending on if we are running search
       const endpoint = searchQuery ? '/search/customers' : '/customers';
       
       const params = {
@@ -150,7 +155,6 @@ export default function Customers() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setSearchQuery(searchVal);
-    // Reset filters when searching to avoid conflicting parameters
     setFilters({ country: '', city: '', gender: 'All', signupQuarter: 'All', churned: 'All' });
     setTempFilters({ country: '', city: '', gender: 'All', signupQuarter: 'All', churned: 'All' });
     setPage(0);
@@ -170,7 +174,7 @@ export default function Customers() {
   const handleApplyFilters = () => {
     setFilters({ ...tempFilters });
     setSearchVal('');
-    setSearchQuery(''); // Clear search query when applying filters
+    setSearchQuery('');
     setPage(0);
     setFilterDrawerOpen(false);
   };
@@ -181,6 +185,40 @@ export default function Customers() {
     setFilters(resetValues);
     setPage(0);
     setFilterDrawerOpen(false);
+  };
+
+  // Individual Actions
+  const handleAddClick = () => {
+    setSelectedCustomer(null);
+    setModalOpen(true);
+  };
+
+  const handleEditClick = (e, customer) => {
+    e.stopPropagation();
+    setSelectedCustomer(customer);
+    setModalOpen(true);
+  };
+
+  const handleDeleteClick = async (e, id) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this customer? This is a soft delete action.")) {
+      try {
+        setError(null);
+        const response = await api.delete(`/customers/${id}`);
+        setSuccessMsg(response.data.message || "Customer deleted successfully.");
+        // Clear selection if it was selected
+        setSelected(prev => prev.filter(selectedId => selectedId !== id));
+        fetchCustomers();
+      } catch (err) {
+        console.error("Delete failed:", err);
+        setError(err.message || "Failed to delete customer.");
+      }
+    }
+  };
+
+  const handleModalSuccess = (message) => {
+    setSuccessMsg(message);
+    fetchCustomers();
   };
 
   // Bulk deletion handler
@@ -216,7 +254,8 @@ export default function Customers() {
     { id: 'location', label: 'Location', sortable: false },
     { id: 'purchases', label: 'Purchases', sortable: true },
     { id: 'lifetimeValue', label: 'LTV', sortable: true },
-    { id: 'churned', label: 'Status', sortable: true }
+    { id: 'churned', label: 'Status', sortable: true },
+    { id: 'actions', label: 'Actions', sortable: false }
   ];
 
   return (
@@ -233,19 +272,29 @@ export default function Customers() {
                 Customer Accounts Database
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Search, filter, and run bulk actions across customer files
+                Search, filter, add, edit, and delete customer analytics profiles
               </Typography>
             </Box>
           </Box>
 
-          <Button 
-            variant="outlined" 
-            startIcon={<FilterListIcon />}
-            onClick={() => setFilterDrawerOpen(true)}
-            sx={{ border: '1px solid', borderColor: 'divider' }}
-          >
-            Filters
-          </Button>
+          <Stack direction="row" spacing={2}>
+            <Button 
+              variant="contained" 
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={handleAddClick}
+            >
+              Add Customer
+            </Button>
+            <Button 
+              variant="outlined" 
+              startIcon={<FilterListIcon />}
+              onClick={() => setFilterDrawerOpen(true)}
+              sx={{ border: '1px solid', borderColor: 'divider' }}
+            >
+              Filters
+            </Button>
+          </Stack>
         </Box>
 
         {error && <Alert severity="error" className="mb-6">{error}</Alert>}
@@ -411,6 +460,24 @@ export default function Customers() {
                               sx={{ fontWeight: 600 }}
                             />
                           </TableCell>
+                          <TableCell onClick={(event) => event.stopPropagation()}>
+                            <Stack direction="row" spacing={0.5}>
+                              <IconButton 
+                                size="small" 
+                                color="primary" 
+                                onClick={(e) => handleEditClick(e, customer)}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton 
+                                size="small" 
+                                color="error" 
+                                onClick={(e) => handleDeleteClick(e, customer._id)}
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Stack>
+                          </TableCell>
                         </TableRow>
                       );
                     })
@@ -539,6 +606,14 @@ export default function Customers() {
             </Box>
           </Stack>
         </Drawer>
+
+        {/* Customer CRUD Modal Form */}
+        <CustomerModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          customer={selectedCustomer}
+          onSuccess={handleModalSuccess}
+        />
       </Box>
     </DashboardLayout>
   );
