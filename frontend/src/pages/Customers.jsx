@@ -2,9 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, Card, CardContent, Typography, Table, TableBody, TableCell, 
   TableContainer, TableHead, TableRow, TableSortLabel, TablePagination, 
-  Paper, Chip, Skeleton, Alert, Stack 
+  Paper, Chip, Skeleton, Alert, Stack, TextField, Button, InputAdornment,
+  Checkbox, Toolbar, Tooltip, IconButton, Grid, FormControl, InputLabel,
+  Select, MenuItem, Drawer, Divider
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ClearIcon from '@mui/icons-material/Clear';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import api from '../utils/api';
 import DashboardLayout from '../components/DashboardLayout';
 
@@ -12,6 +19,7 @@ export default function Customers() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
 
   // Pagination states
   const [page, setPage] = useState(0);
@@ -22,20 +30,50 @@ export default function Customers() {
   const [orderBy, setOrderBy] = useState('createdAt');
   const [order, setOrder] = useState('desc');
 
+  // Search & Filter states
+  const [searchVal, setSearchVal] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    country: '',
+    city: '',
+    gender: 'All',
+    signupQuarter: 'All',
+    churned: 'All',
+  });
+  
+  // Staging filters before applying
+  const [tempFilters, setTempFilters] = useState({ ...filters });
+
+  // Selection state for bulk deletion
+  const [selected, setSelected] = useState([]);
+
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Mongoose sort param matches: field (asc) or -field (desc)
       const sortParam = order === 'desc' ? `-${orderBy}` : orderBy;
       
-      const response = await api.get('/customers', {
-        params: {
-          page: page + 1,
-          limit: rowsPerPage,
-          sort: sortParam
-        }
-      });
+      // Select API endpoint depending on if we are running search
+      const endpoint = searchQuery ? '/search/customers' : '/customers';
+      
+      const params = {
+        page: page + 1,
+        limit: rowsPerPage,
+        sort: sortParam,
+      };
+
+      if (searchQuery) {
+        params.q = searchQuery;
+      } else {
+        if (filters.country) params.country = filters.country;
+        if (filters.city) params.city = filters.city;
+        if (filters.gender !== 'All') params.gender = filters.gender;
+        if (filters.signupQuarter !== 'All') params.signupQuarter = filters.signupQuarter;
+        if (filters.churned !== 'All') params.churned = filters.churned === 'Churned' ? 1 : 0;
+      }
+
+      const response = await api.get(endpoint, { params });
 
       const { customers: list, pagination } = response.data.data;
       setCustomers(list || []);
@@ -46,12 +84,21 @@ export default function Customers() {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, orderBy, order]);
+  }, [page, rowsPerPage, orderBy, order, searchQuery, filters]);
 
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
 
+  // Clean success alert after delay
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => setSuccessMsg(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+
+  // Page handlers
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -66,6 +113,93 @@ export default function Customers() {
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
     setPage(0);
+  };
+
+  // Selection handlers
+  const handleSelectAllClick = (event) => {
+    if (event.target.checked) {
+      const newSelecteds = customers.map((n) => n._id);
+      setSelected(newSelecteds);
+      return;
+    }
+    setSelected([]);
+  };
+
+  const handleClickSelectRow = (event, id) => {
+    const selectedIndex = selected.indexOf(id);
+    let newSelected = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selected, id);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selected.slice(1));
+    } else if (selectedIndex === selected.length - 1) {
+      newSelected = newSelected.concat(selected.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selected.slice(0, selectedIndex),
+        selected.slice(selectedIndex + 1)
+      );
+    }
+    setSelected(newSelected);
+  };
+
+  const isSelected = (id) => selected.indexOf(id) !== -1;
+
+  // Search trigger
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setSearchQuery(searchVal);
+    // Reset filters when searching to avoid conflicting parameters
+    setFilters({ country: '', city: '', gender: 'All', signupQuarter: 'All', churned: 'All' });
+    setTempFilters({ country: '', city: '', gender: 'All', signupQuarter: 'All', churned: 'All' });
+    setPage(0);
+  };
+
+  const handleClearSearch = () => {
+    setSearchVal('');
+    setSearchQuery('');
+    setPage(0);
+  };
+
+  // Filter handlers
+  const handleFilterChange = (field, value) => {
+    setTempFilters(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleApplyFilters = () => {
+    setFilters({ ...tempFilters });
+    setSearchVal('');
+    setSearchQuery(''); // Clear search query when applying filters
+    setPage(0);
+    setFilterDrawerOpen(false);
+  };
+
+  const handleResetFilters = () => {
+    const resetValues = { country: '', city: '', gender: 'All', signupQuarter: 'All', churned: 'All' };
+    setTempFilters(resetValues);
+    setFilters(resetValues);
+    setPage(0);
+    setFilterDrawerOpen(false);
+  };
+
+  // Bulk deletion handler
+  const handleBulkDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete the ${selected.length} selected customer(s)?`)) {
+      try {
+        setError(null);
+        const response = await api.delete('/customers/bulk-delete', {
+          data: { ids: selected }
+        });
+        setSuccessMsg(response.data.message || `Deleted ${selected.length} customers successfully.`);
+        setSelected([]);
+        setPage(0);
+        fetchCustomers();
+      } catch (err) {
+        console.error("Bulk delete failed:", err);
+        setError(err.message || "Bulk deletion failed.");
+      }
+    }
   };
 
   const formatCurrency = (value) => {
@@ -89,32 +223,102 @@ export default function Customers() {
     <DashboardLayout>
       <Box className="w-full">
         {/* Page Title & Icon */}
-        <Box className="flex items-center gap-3 mb-6">
-          <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'primary.light', display: 'flex', color: 'primary.contrastText' }}>
-            <PeopleIcon sx={{ fontSize: 28 }} />
+        <Box className="flex justify-between items-center mb-6">
+          <Box className="flex items-center gap-3">
+            <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'primary.light', display: 'flex', color: 'primary.contrastText' }}>
+              <PeopleIcon sx={{ fontSize: 28 }} />
+            </Box>
+            <Box>
+              <Typography variant="h5" className="font-extrabold tracking-tight">
+                Customer Accounts Database
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Search, filter, and run bulk actions across customer files
+              </Typography>
+            </Box>
           </Box>
-          <Box>
-            <Typography variant="h5" className="font-extrabold tracking-tight">
-              Customer Accounts Database
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Review, sort, and paginate through Mongoose customer records
-            </Typography>
-          </Box>
+
+          <Button 
+            variant="outlined" 
+            startIcon={<FilterListIcon />}
+            onClick={() => setFilterDrawerOpen(true)}
+            sx={{ border: '1px solid', borderColor: 'divider' }}
+          >
+            Filters
+          </Button>
         </Box>
 
-        {error && (
-          <Alert severity="error" className="mb-6" sx={{ borderRadius: 2 }}>
-            {error}
-          </Alert>
-        )}
+        {error && <Alert severity="error" className="mb-6">{error}</Alert>}
+        {successMsg && <Alert severity="success" className="mb-6">{successMsg}</Alert>}
 
+        {/* Toolbar & Search Bar */}
+        <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
+          <Grid container spacing={2} alignItems="center" justifyContent="space-between">
+            <Grid item xs={12} md={6}>
+              <form onSubmit={handleSearchSubmit}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  placeholder="Search by name, email, country, city, gender..."
+                  value={searchVal}
+                  onChange={(e) => setSearchVal(e.target.value)}
+                  slotProps={{
+                    input: {
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon color="action" />
+                        </InputAdornment>
+                      ),
+                      endAdornment: searchVal && (
+                        <InputAdornment position="end">
+                          <IconButton size="small" onClick={handleClearSearch}>
+                            <ClearIcon fontSize="small" />
+                          </IconButton>
+                        </InputAdornment>
+                      )
+                    }
+                  }}
+                />
+              </form>
+            </Grid>
+
+            <Grid item xs={12} md={6} className="text-right">
+              {selected.length > 0 && (
+                <Toolbar sx={{ justifyContent: 'flex-end', p: '0 !important' }}>
+                  <Typography variant="subtitle2" sx={{ mr: 2 }} className="font-semibold text-rose-500">
+                    {selected.length} selected
+                  </Typography>
+                  <Tooltip title="Delete Selected">
+                    <Button 
+                      variant="contained" 
+                      color="error" 
+                      startIcon={<DeleteIcon />}
+                      onClick={handleBulkDelete}
+                    >
+                      Delete Selected
+                    </Button>
+                  </Tooltip>
+                </Toolbar>
+              )}
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Customer Table */}
         <Card sx={{ borderRadius: 3, boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)' }}>
           <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
             <TableContainer component={Paper} elevation={0} sx={{ maxHeight: 650, borderRadius: 0 }}>
               <Table stickyHeader sx={{ minWidth: 800 }}>
                 <TableHead>
                   <TableRow>
+                    <TableCell padding="checkbox" sx={{ bgcolor: 'background.paper' }}>
+                      <Checkbox
+                        indeterminate={selected.length > 0 && selected.length < customers.length}
+                        checked={customers.length > 0 && selected.length === customers.length}
+                        onChange={handleSelectAllClick}
+                        inputProps={{ 'aria-label': 'select all customers' }}
+                      />
+                    </TableCell>
                     {tableHeaders.map((header) => (
                       <TableCell 
                         key={header.id}
@@ -139,9 +343,11 @@ export default function Customers() {
 
                 <TableBody>
                   {loading ? (
-                    // Skeleton loader rows
                     Array.from(new Array(rowsPerPage)).map((_, index) => (
                       <TableRow key={index}>
+                        <TableCell padding="checkbox">
+                          <Skeleton variant="rectangular" width={20} height={20} />
+                        </TableCell>
                         {tableHeaders.map((_, idx) => (
                           <TableCell key={idx}>
                             <Skeleton variant="text" width={idx === 1 ? 200 : 80} height={24} />
@@ -151,49 +357,63 @@ export default function Customers() {
                     ))
                   ) : customers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={tableHeaders.length} align="center" sx={{ py: 6 }}>
-                        <Typography color="text.secondary">No customer records found.</Typography>
+                      <TableCell colSpan={tableHeaders.length + 1} align="center" sx={{ py: 6 }}>
+                        <Typography color="text.secondary">No customer records found matching queries.</Typography>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    customers.map((customer) => (
-                      <TableRow 
-                        key={customer._id}
-                        hover
-                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                      >
-                        <TableCell className="font-semibold">{customer.name}</TableCell>
-                        <TableCell>{customer.email}</TableCell>
-                        <TableCell>
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography variant="body2">{customer.age} yrs</Typography>
-                            <Chip 
-                              label={customer.gender} 
-                              size="small" 
-                              variant="outlined" 
-                              sx={{ fontSize: '0.7rem', height: 18 }} 
+                    customers.map((customer) => {
+                      const isItemSelected = isSelected(customer._id);
+                      return (
+                        <TableRow 
+                          key={customer._id}
+                          hover
+                          role="checkbox"
+                          aria-checked={isItemSelected}
+                          selected={isItemSelected}
+                          onClick={(event) => handleClickSelectRow(event, customer._id)}
+                          sx={{ cursor: 'pointer', '&:last-child td, &:last-child th': { border: 0 } }}
+                        >
+                          <TableCell padding="checkbox" onClick={(event) => event.stopPropagation()}>
+                            <Checkbox
+                              checked={isItemSelected}
+                              onChange={(event) => handleClickSelectRow(event, customer._id)}
+                              inputProps={{ 'aria-labelledby': customer._id }}
                             />
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <Typography variant="body2">{customer.city}</Typography>
-                          <Typography variant="caption" color="text.secondary">{customer.country}</Typography>
-                        </TableCell>
-                        <TableCell className="font-mono">{customer.purchases}</TableCell>
-                        <TableCell className="font-mono font-bold text-indigo-500">
-                          {formatCurrency(customer.lifetimeValue)}
-                        </TableCell>
-                        <TableCell>
-                          <Chip 
-                            label={customer.churned === 1 ? 'Churned' : 'Active'} 
-                            color={customer.churned === 1 ? 'error' : 'success'}
-                            size="small"
-                            variant="outlined"
-                            sx={{ fontWeight: 600 }}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))
+                          </TableCell>
+                          <TableCell className="font-semibold">{customer.name}</TableCell>
+                          <TableCell>{customer.email}</TableCell>
+                          <TableCell>
+                            <Stack direction="row" spacing={1} alignItems="center" onClick={(e) => e.stopPropagation()}>
+                              <Typography variant="body2">{customer.age} yrs</Typography>
+                              <Chip 
+                                label={customer.gender} 
+                                size="small" 
+                                variant="outlined" 
+                                sx={{ fontSize: '0.7rem', height: 18 }} 
+                              />
+                            </Stack>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">{customer.city}</Typography>
+                            <Typography variant="caption" color="text.secondary">{customer.country}</Typography>
+                          </TableCell>
+                          <TableCell className="font-mono">{customer.purchases}</TableCell>
+                          <TableCell className="font-mono font-bold text-indigo-500">
+                            {formatCurrency(customer.lifetimeValue)}
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={customer.churned === 1 ? 'Churned' : 'Active'} 
+                              color={customer.churned === 1 ? 'error' : 'success'}
+                              size="small"
+                              variant="outlined"
+                              sx={{ fontWeight: 600 }}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   )}
                 </TableBody>
               </Table>
@@ -211,6 +431,114 @@ export default function Customers() {
             />
           </CardContent>
         </Card>
+
+        {/* Filters Sidebar (Drawer) */}
+        <Drawer
+          anchor="right"
+          open={filterDrawerOpen}
+          onClose={() => setFilterDrawerOpen(false)}
+          slotProps={{ paper: { sx: { width: 320, p: 3 } } }}
+        >
+          <Box className="flex justify-between items-center mb-4">
+            <Typography variant="h6" className="font-extrabold flex items-center gap-2">
+              <FilterListIcon color="primary" />
+              <span>Database Filters</span>
+            </Typography>
+            <IconButton onClick={() => setFilterDrawerOpen(false)}>
+              <ClearIcon />
+            </IconButton>
+          </Box>
+          <Divider sx={{ mb: 3 }} />
+
+          <Stack spacing={3}>
+            {/* Country Filter */}
+            <TextField
+              label="Country"
+              size="small"
+              placeholder="e.g. United States"
+              value={tempFilters.country}
+              onChange={(e) => handleFilterChange('country', e.target.value)}
+            />
+
+            {/* City Filter */}
+            <TextField
+              label="City"
+              size="small"
+              placeholder="e.g. Los Angeles"
+              value={tempFilters.city}
+              onChange={(e) => handleFilterChange('city', e.target.value)}
+            />
+
+            {/* Gender Filter */}
+            <FormControl fullWidth size="small">
+              <InputLabel id="gender-filter-label">Gender</InputLabel>
+              <Select
+                labelId="gender-filter-label"
+                id="gender-filter"
+                value={tempFilters.gender}
+                label="Gender"
+                onChange={(e) => handleFilterChange('gender', e.target.value)}
+              >
+                <MenuItem value="All">All Genders</MenuItem>
+                <MenuItem value="Male">Male</MenuItem>
+                <MenuItem value="Female">Female</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Signup Quarter Filter */}
+            <FormControl fullWidth size="small">
+              <InputLabel id="quarter-filter-label">Signup Quarter</InputLabel>
+              <Select
+                labelId="quarter-filter-label"
+                id="quarter-filter"
+                value={tempFilters.signupQuarter}
+                label="Signup Quarter"
+                onChange={(e) => handleFilterChange('signupQuarter', e.target.value)}
+              >
+                <MenuItem value="All">All Quarters</MenuItem>
+                <MenuItem value="Q1">Q1</MenuItem>
+                <MenuItem value="Q2">Q2</MenuItem>
+                <MenuItem value="Q3">Q3</MenuItem>
+                <MenuItem value="Q4">Q4</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Churn Filter */}
+            <FormControl fullWidth size="small">
+              <InputLabel id="churn-filter-label">Churn Status</InputLabel>
+              <Select
+                labelId="churn-filter-label"
+                id="churn-filter"
+                value={tempFilters.churned}
+                label="Churn Status"
+                onChange={(e) => handleFilterChange('churned', e.target.value)}
+              >
+                <MenuItem value="All">All Statuses</MenuItem>
+                <MenuItem value="Active">Active Only</MenuItem>
+                <MenuItem value="Churned">Churned Only</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Box className="pt-4 flex gap-2">
+              <Button 
+                variant="contained" 
+                color="primary" 
+                fullWidth
+                onClick={handleApplyFilters}
+              >
+                Apply Filters
+              </Button>
+              <Button 
+                variant="outlined" 
+                color="secondary" 
+                startIcon={<RestartAltIcon />}
+                onClick={handleResetFilters}
+              >
+                Reset
+              </Button>
+            </Box>
+          </Stack>
+        </Drawer>
       </Box>
     </DashboardLayout>
   );
