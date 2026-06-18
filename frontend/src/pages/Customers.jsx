@@ -14,15 +14,17 @@ import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import ClearIcon from '@mui/icons-material/Clear';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { useDispatch } from 'react-redux';
+import { showToast } from '../store/slices';
 import api from '../utils/api';
 import DashboardLayout from '../components/DashboardLayout';
 import CustomerModal from '../components/CustomerModal';
 
 export default function Customers() {
+  const dispatch = useDispatch();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [successMsg, setSuccessMsg] = useState(null);
 
   // Pagination states
   const [page, setPage] = useState(0);
@@ -86,22 +88,15 @@ export default function Customers() {
     } catch (err) {
       console.error("Failed to fetch customers:", err);
       setError(err.message || "Failed to load customer records.");
+      dispatch(showToast({ message: err.message || "Failed to load customers.", severity: 'error' }));
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, orderBy, order, searchQuery, filters]);
+  }, [page, rowsPerPage, orderBy, order, searchQuery, filters, dispatch]);
 
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
-
-  // Clean success alert after delay
-  useEffect(() => {
-    if (successMsg) {
-      const timer = setTimeout(() => setSuccessMsg(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMsg]);
 
   // Page handlers
   const handleChangePage = (event, newPage) => {
@@ -205,19 +200,24 @@ export default function Customers() {
       try {
         setError(null);
         const response = await api.delete(`/customers/${id}`);
-        setSuccessMsg(response.data.message || "Customer deleted successfully.");
-        // Clear selection if it was selected
+        dispatch(showToast({ 
+          message: response.data.message || "Customer deleted successfully.", 
+          severity: 'success' 
+        }));
         setSelected(prev => prev.filter(selectedId => selectedId !== id));
         fetchCustomers();
       } catch (err) {
         console.error("Delete failed:", err);
-        setError(err.message || "Failed to delete customer.");
+        dispatch(showToast({ 
+          message: err.message || "Failed to delete customer.", 
+          severity: 'error' 
+        }));
       }
     }
   };
 
   const handleModalSuccess = (message) => {
-    setSuccessMsg(message);
+    dispatch(showToast({ message, severity: 'success' }));
     fetchCustomers();
   };
 
@@ -229,13 +229,19 @@ export default function Customers() {
         const response = await api.delete('/customers/bulk-delete', {
           data: { ids: selected }
         });
-        setSuccessMsg(response.data.message || `Deleted ${selected.length} customers successfully.`);
+        dispatch(showToast({ 
+          message: response.data.message || `Deleted ${selected.length} customers successfully.`, 
+          severity: 'success' 
+        }));
         setSelected([]);
         setPage(0);
         fetchCustomers();
       } catch (err) {
         console.error("Bulk delete failed:", err);
-        setError(err.message || "Bulk deletion failed.");
+        dispatch(showToast({ 
+          message: err.message || "Bulk deletion failed.", 
+          severity: 'error' 
+        }));
       }
     }
   };
@@ -298,7 +304,6 @@ export default function Customers() {
         </Box>
 
         {error && <Alert severity="error" className="mb-6">{error}</Alert>}
-        {successMsg && <Alert severity="success" className="mb-6">{successMsg}</Alert>}
 
         {/* Toolbar & Search Bar */}
         <Paper elevation={0} sx={{ p: 2, mb: 3, border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>

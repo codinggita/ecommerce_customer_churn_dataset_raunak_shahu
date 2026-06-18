@@ -42,6 +42,11 @@ const uiSlice = createSlice({
     sidebarOpen: true,
     loading: false,
     themeMode: localStorage.getItem('themeMode') || 'dark',
+    toast: {
+      open: false,
+      message: '',
+      severity: 'success', // 'success' | 'error' | 'warning' | 'info'
+    }
   },
   reducers: {
     toggleSidebar: (state) => {
@@ -58,11 +63,19 @@ const uiSlice = createSlice({
       state.themeMode = nextMode;
       localStorage.setItem('themeMode', nextMode);
     },
+    showToast: (state, action) => {
+      state.toast.open = true;
+      state.toast.message = action.payload.message;
+      state.toast.severity = action.payload.severity || 'success';
+    },
+    hideToast: (state) => {
+      state.toast.open = false;
+    }
   },
 });
 
 export const { setCredentials, clearCredentials } = authSlice.actions;
-export const { toggleSidebar, setSidebar, setLoading, toggleTheme } = uiSlice.actions;
+export const { toggleSidebar, setSidebar, setLoading, toggleTheme, showToast, hideToast } = uiSlice.actions;
 
 export const authReducer = authSlice.reducer;
 export const uiReducer = uiSlice.reducer;
