@@ -8,6 +8,7 @@ import { Login, Register } from './pages/AuthPages';
 import Dashboard from './pages/Dashboard';
 import { Unauthorized, NotFound } from './pages/ErrorPages';
 import AdminInsights from './pages/AdminInsights';
+import Customers from './pages/Customers';
 
 function App() {
   const { themeMode } = useSelector((state) => state.ui);
@@ -29,6 +30,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/customers" 
+            element={
+              <ProtectedRoute>
+                <Customers />
               </ProtectedRoute>
             } 
           />
