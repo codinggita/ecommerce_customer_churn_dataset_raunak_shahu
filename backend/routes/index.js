@@ -9,6 +9,7 @@ const statsRoutes = require('./statsRoutes');
 const analyticsRoutes = require('./analyticsRoutes');
 const authRoutes = require('./authRoutes');
 const jwtRoutes = require('./jwtRoutes');
+const adminRoutes = require('./adminRoutes');
 
 
 // Mount routes to API namespace
@@ -19,5 +20,6 @@ router.use('/stats', statsRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/auth', authRoutes);
 router.use('/jwt', jwtRoutes);
+router.use('/admin', adminRoutes);
 
 module.exports = router;

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "seed": "node scripts/importDataset.js"
+    "seed": "node scripts/importDataset.js",
+    "analyze": "node scripts/analyzeData.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
