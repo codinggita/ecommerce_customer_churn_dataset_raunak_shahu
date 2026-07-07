@@ -8,6 +8,7 @@ import { Login, Register } from './pages/AuthPages';
 import Dashboard from './pages/Dashboard';
 import { Unauthorized, NotFound } from './pages/ErrorPages';
 import AdminInsights from './pages/AdminInsights';
+import Analytics from './pages/Analytics';
 import Customers from './pages/Customers';
 import { hideToast } from './store/slices';
 
@@ -54,6 +55,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['Admin']}>
                 <AdminInsights />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/analytics" 
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <Analytics />
               </ProtectedRoute>
             } 
           />
