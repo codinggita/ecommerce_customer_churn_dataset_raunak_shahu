@@ -14,6 +14,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import ClearIcon from '@mui/icons-material/Clear';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import InsightsIcon from '@mui/icons-material/Insights';
 import { useDispatch } from 'react-redux';
 import { showToast } from '../store/slices';
 import api from '../utils/api';
@@ -50,6 +51,9 @@ export default function Customers() {
   // Staging filters before applying
   const [tempFilters, setTempFilters] = useState({ ...filters });
 
+  // Custom Segment states
+  const [currentSegment, setCurrentSegment] = useState('all');
+
   // Selection state for bulk deletion
   const [selected, setSelected] = useState([]);
 
@@ -62,7 +66,7 @@ export default function Customers() {
     setError(null);
     try {
       const sortParam = order === 'desc' ? `-${orderBy}` : orderBy;
-      const endpoint = searchQuery ? '/search/customers' : '/customers';
+      let endpoint = '/customers';
       
       const params = {
         page: page + 1,
@@ -70,7 +74,10 @@ export default function Customers() {
         sort: sortParam,
       };
 
-      if (searchQuery) {
+      if (currentSegment !== 'all') {
+        endpoint = `/customers/${currentSegment}`;
+      } else if (searchQuery) {
+        endpoint = '/search/customers';
         params.q = searchQuery;
       } else {
         if (filters.country) params.country = filters.country;
@@ -92,7 +99,7 @@ export default function Customers() {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, orderBy, order, searchQuery, filters, dispatch]);
+  }, [page, rowsPerPage, orderBy, order, searchQuery, filters, currentSegment, dispatch]);
 
   useEffect(() => {
     fetchCustomers();
@@ -296,12 +303,60 @@ export default function Customers() {
               variant="outlined" 
               startIcon={<FilterListIcon />}
               onClick={() => setFilterDrawerOpen(true)}
+              disabled={currentSegment !== 'all'}
               sx={{ border: '1px solid', borderColor: 'divider' }}
             >
               Filters
             </Button>
           </Stack>
         </Box>
+
+        {/* Predefined Quick Segment Chips */}
+        <Box sx={{ mb: 3, display: 'flex', gap: 1, overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { height: 6 }, '&::-webkit-scrollbar-thumb': { bgcolor: 'action.hover', borderRadius: 3 } }}>
+          {[
+            { id: 'all', label: 'All Customers', color: 'default' },
+            { id: 'churned', label: 'Churned Only', color: 'error' },
+            { id: 'active', label: 'Active Only', color: 'success' },
+            { id: 'high-value', label: 'High LTV', color: 'primary' },
+            { id: 'high-purchases', label: 'High Purchases', color: 'secondary' },
+            { id: 'high-credit', label: 'High Credit', color: 'warning' },
+            { id: 'high-engagement', label: 'Highly Engaged', color: 'info' },
+            { id: 'high-mobile-usage', label: 'High Mobile Usage', color: 'primary' },
+            { id: 'inactive', label: 'Inactive Buyers', color: 'error' },
+            { id: 'loyal', label: 'Loyal Customers', color: 'warning' }
+          ].map((seg) => {
+            const isSelected = currentSegment === seg.id;
+            return (
+              <Chip
+                key={seg.id}
+                label={seg.label}
+                color={isSelected ? (seg.color === 'default' ? 'primary' : seg.color) : 'default'}
+                variant={isSelected ? 'filled' : 'outlined'}
+                onClick={() => {
+                  setCurrentSegment(seg.id);
+                  setSearchVal('');
+                  setSearchQuery('');
+                  setFilters({ country: '', city: '', gender: 'All', signupQuarter: 'All', churned: 'All' });
+                  setTempFilters({ country: '', city: '', gender: 'All', signupQuarter: 'All', churned: 'All' });
+                  setPage(0);
+                }}
+                sx={{ 
+                  fontWeight: isSelected ? 700 : 500, 
+                  px: 0.5,
+                  cursor: 'pointer',
+                  '&:hover': { transform: 'scale(1.02)' },
+                  transition: 'transform 0.1s ease'
+                }}
+              />
+            );
+          })}
+        </Box>
+
+        {currentSegment !== 'all' && (
+          <Alert severity="info" sx={{ mb: 3, borderRadius: 2 }} icon={<InsightsIcon sx={{ fontSize: 20 }} />}>
+            Displaying custom database segment: <strong>{currentSegment.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</strong>. Standard search and manual filters are disabled for segments.
+          </Alert>
+        )}
 
         {error && <Alert severity="error" className="mb-6">{error}</Alert>}
 
@@ -310,29 +365,32 @@ export default function Customers() {
           <Grid container spacing={2} alignItems="center" justifyContent="space-between">
             <Grid item xs={12} md={6}>
               <form onSubmit={handleSearchSubmit}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Search by name, email, country, city, gender..."
-                  value={searchVal}
-                  onChange={(e) => setSearchVal(e.target.value)}
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon color="action" />
-                        </InputAdornment>
-                      ),
-                      endAdornment: searchVal && (
-                        <InputAdornment position="end">
-                          <IconButton size="small" onClick={handleClearSearch}>
-                            <ClearIcon fontSize="small" />
-                          </IconButton>
-                        </InputAdornment>
-                      )
-                    }
-                  }}
-                />
+                <Tooltip title={currentSegment !== 'all' ? "Search is disabled when a segment is selected" : ""}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    disabled={currentSegment !== 'all'}
+                    placeholder="Search by name, email, country, city, gender..."
+                    value={searchVal}
+                    onChange={(e) => setSearchVal(e.target.value)}
+                    slotProps={{
+                      input: {
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon color="action" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: searchVal && (
+                          <InputAdornment position="end">
+                            <IconButton size="small" onClick={handleClearSearch}>
+                              <ClearIcon fontSize="small" />
+                            </IconButton>
+                          </InputAdornment>
+                        )
+                      }
+                    }}
+                  />
+                </Tooltip>
               </form>
             </Grid>
 
