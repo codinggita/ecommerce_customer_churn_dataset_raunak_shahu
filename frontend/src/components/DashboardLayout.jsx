@@ -60,6 +60,7 @@ export default function DashboardLayout({ children }) {
 
   // Admin-only menu items
   if (user && user.role === 'Admin') {
+    menuItems.push({ text: 'Analytics', icon: <BarChartIcon />, path: '/analytics' });
     menuItems.push({ text: 'Admin Insights', icon: <ShieldIcon />, path: '/admin-insights' });
   }
 
