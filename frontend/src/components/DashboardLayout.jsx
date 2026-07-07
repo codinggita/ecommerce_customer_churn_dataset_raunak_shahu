@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, 
-  ListItem, ListItemButton, ListItemIcon, ListItemText, Avatar, Menu, MenuItem, Tooltip, useTheme
+  Box, AppBar, Toolbar, Typography, Divider, IconButton, 
+  Avatar, Menu, MenuItem, Tooltip, useTheme, Stack, Chip, ListItemIcon, Button
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import BarChartIcon from '@mui/icons-material/BarChart';
@@ -14,9 +13,7 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { toggleSidebar, toggleTheme, clearCredentials } from '../store/slices';
-
-const drawerWidth = 260;
+import { toggleTheme, clearCredentials } from '../store/slices';
 
 export default function DashboardLayout({ children }) {
   const navigate = useNavigate();
@@ -25,9 +22,10 @@ export default function DashboardLayout({ children }) {
   const theme = useTheme();
   
   const { user } = useSelector((state) => state.auth);
-  const { sidebarOpen, themeMode } = useSelector((state) => state.ui);
+  const { themeMode } = useSelector((state) => state.ui);
   
   const [anchorEl, setAnchorEl] = useState(null);
+  const [mobileAnchorEl, setMobileAnchorEl] = useState(null);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -37,16 +35,24 @@ export default function DashboardLayout({ children }) {
     setAnchorEl(null);
   };
 
+  const handleMobileOpen = (event) => {
+    setMobileAnchorEl(event.currentTarget);
+  };
+
+  const handleMobileClose = () => {
+    setMobileAnchorEl(null);
+  };
+
   const handleLogout = () => {
     handleMenuClose();
     dispatch(clearCredentials());
     navigate('/login');
   };
 
-  // Determine current active section name for title
+  // Determine current active section name for title on smaller screens
   const getPageTitle = () => {
     switch(location.pathname) {
-      case '/': return 'Dashboard Overview';
+      case '/dashboard': return 'Dashboard Overview';
       case '/customers': return 'Customer Database';
       case '/analytics': return 'Analytics Deep Dive';
       case '/admin-insights': return 'Administrative Insights';
@@ -55,72 +61,142 @@ export default function DashboardLayout({ children }) {
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { text: 'Customers', icon: <PeopleIcon />, path: '/customers' },
+    { text: 'Dashboard', icon: <DashboardIcon sx={{ fontSize: 20 }} />, path: '/dashboard' },
+    { text: 'Customers', icon: <PeopleIcon sx={{ fontSize: 20 }} />, path: '/customers' },
   ];
 
   // Admin-only menu items
   if (user && user.role === 'Admin') {
-    menuItems.push({ text: 'Analytics', icon: <BarChartIcon />, path: '/analytics' });
-    menuItems.push({ text: 'Admin Insights', icon: <ShieldIcon />, path: '/admin-insights' });
+    menuItems.push({ text: 'Analytics', icon: <BarChartIcon sx={{ fontSize: 20 }} />, path: '/analytics' });
+    menuItems.push({ text: 'Admin Insights', icon: <ShieldIcon sx={{ fontSize: 20 }} />, path: '/admin-insights' });
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default', transition: 'all 0.3s ease' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default', transition: 'all 0.3s ease' }}>
       
-      {/* Top AppBar */}
+      {/* Horizontal Top Navigation Bar */}
       <AppBar
-        position="fixed"
+        position="sticky"
         sx={{
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          transition: (theme) => theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-          ...(sidebarOpen && {
-            marginLeft: `${drawerWidth}px`,
-            width: `calc(100% - ${drawerWidth}px)`,
-            transition: (theme) => theme.transitions.create(['width', 'margin'], {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-          }),
-          bgcolor: 'background.paper',
+          bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(19, 21, 23, 0.8)' : 'rgba(255, 255, 255, 0.8)',
           color: 'text.primary',
           boxShadow: 'none',
           borderBottom: '1px solid',
           borderColor: 'divider',
+          backdropFilter: 'blur(20px)',
+          backgroundImage: 'none',
+          top: 0,
+          zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 4 }, py: 0.5 }}>
+          
+          {/* Left Side: Logo & Title */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {/* Mobile Menu Icon Button */}
             <IconButton
               color="inherit"
-              aria-label="toggle drawer"
-              onClick={() => dispatch(toggleSidebar())}
+              aria-label="open mobile menu"
+              onClick={handleMobileOpen}
               edge="start"
-              sx={{ mr: 1, '&:hover': { transform: 'scale(1.05)' }, '&:active': { transform: 'scale(0.95)' } }}
+              sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }}
             >
-              {sidebarOpen ? <ChevronLeftIcon /> : <MenuIcon />}
+              <MenuIcon />
             </IconButton>
-            <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 850, letterSpacing: '-0.02em' }}>
-              {getPageTitle()}
-            </Typography>
+
+            {/* Antigravity Logo */}
+            <Box 
+              sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}
+              onClick={() => navigate('/dashboard')}
+            >
+              <Avatar sx={{ 
+                bgcolor: 'primary.main', 
+                width: 34, 
+                height: 34, 
+                fontSize: '0.9rem', 
+                fontWeight: 800, 
+                color: 'primary.contrastText' 
+              }}>
+                A
+              </Avatar>
+              <Typography variant="h6" className="text-gradient-gold font-extrabold tracking-tight" sx={{ fontSize: '1.2rem', display: { xs: 'none', sm: 'block' } }}>
+                Antigravity
+              </Typography>
+            </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {/* Center Side: Horizontal Navigation Items (Visible on md and larger) */}
+          <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Button
+                  key={item.text}
+                  onClick={() => navigate(item.path)}
+                  startIcon={item.icon}
+                  sx={{
+                    borderRadius: '12px',
+                    px: 2.2,
+                    py: 1,
+                    color: isActive ? 'primary.main' : 'text.secondary',
+                    fontWeight: isActive ? 700 : 600,
+                    backgroundColor: isActive 
+                      ? (theme.palette.mode === 'dark' ? 'rgba(230, 195, 100, 0.08)' : 'rgba(201, 168, 76, 0.08)')
+                      : 'transparent',
+                    textTransform: 'none',
+                    fontSize: '0.925rem',
+                    transition: 'all 0.2s ease',
+                    border: '1px solid',
+                    borderColor: isActive ? 'rgba(201, 168, 76, 0.2)' : 'transparent',
+                    '&:hover': {
+                      color: 'primary.main',
+                      backgroundColor: isActive 
+                        ? (theme.palette.mode === 'dark' ? 'rgba(230, 195, 100, 0.12)' : 'rgba(201, 168, 76, 0.12)')
+                        : (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)'),
+                      transform: 'translateY(-1px)'
+                    },
+                    '&:active': {
+                      transform: 'scale(0.98)'
+                    }
+                  }}
+                >
+                  {item.text}
+                </Button>
+              );
+            })}
+          </Stack>
+
+          {/* Mobile Page Title Header (Visible on xs screens) */}
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              display: { xs: 'block', md: 'none' }, 
+              fontWeight: 800, 
+              letterSpacing: '-0.01em',
+              color: 'text.primary'
+            }}
+          >
+            {getPageTitle()}
+          </Typography>
+
+          {/* Right Side: Theme Mode & Account Profile Dropdown */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             {/* Theme Toggle Button */}
             <Tooltip title={`Switch to ${themeMode === 'light' ? 'Dark' : 'Light'} Mode`}>
               <IconButton 
                 onClick={() => dispatch(toggleTheme())} 
                 color="inherit"
-                sx={{ '&:hover': { transform: 'rotate(15deg) scale(1.05)' }, '&:active': { transform: 'scale(0.95)' }, transition: 'all 0.2s' }}
+                sx={{ 
+                  '&:hover': { transform: 'rotate(15deg) scale(1.05)' }, 
+                  '&:active': { transform: 'scale(0.95)' }, 
+                  transition: 'all 0.2s' 
+                }}
               >
                 {themeMode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
               </IconButton>
             </Tooltip>
 
-            {/* Profile Menu Trigger */}
+            {/* Profile Avatar Settings Trigger */}
             <Tooltip title="Account Settings">
               <IconButton onClick={handleMenuOpen} sx={{ p: 0, '&:hover': { transform: 'scale(1.05)' }, transition: 'all 0.2s' }}>
                 <Avatar 
@@ -139,6 +215,7 @@ export default function DashboardLayout({ children }) {
               </IconButton>
             </Tooltip>
 
+            {/* Premium Account Dropdown Menu */}
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
@@ -149,115 +226,122 @@ export default function DashboardLayout({ children }) {
               slotProps={{
                 paper: {
                   sx: {
-                    borderRadius: 3,
-                    minWidth: 190,
-                    boxShadow: '0 4px 20px 0 rgba(0,0,0,0.08)',
+                    borderRadius: '16px',
+                    minWidth: 240,
+                    p: 2,
+                    boxShadow: theme => theme.palette.mode === 'dark' ? '0 10px 40px rgba(0, 0, 0, 0.5)' : '0 10px 40px rgba(0, 0, 0, 0.08)',
                     border: '1px solid',
                     borderColor: 'divider',
+                    background: theme => theme.palette.mode === 'dark' ? 'rgba(19, 21, 23, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+                    backdropFilter: 'blur(20px)',
+                    backgroundImage: 'none'
                   }
                 }
               }}
             >
-              <Box sx={{ px: 2, py: 1.5 }}>
-                <Typography variant="subtitle2" noWrap sx={{ fontWeight: 800 }}>{user?.name}</Typography>
-                <Typography variant="body2" color="text.secondary" noWrap sx={{ fontSize: '0.75rem' }}>{user?.email}</Typography>
-                <Typography variant="caption" color="primary" sx={{ display: 'block', fontWeight: 700, mt: 0.5, letterSpacing: '0.05em' }}>
-                  {user?.role?.toUpperCase()}
-                </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, py: 1.5, px: 1 }}>
+                <Avatar 
+                  sx={{ 
+                    bgcolor: user?.role === 'Admin' ? 'primary.main' : 'secondary.main',
+                    width: 56,
+                    height: 56,
+                    fontSize: '1.5rem',
+                    fontWeight: 800,
+                    color: user?.role === 'Admin' ? 'primary.contrastText' : 'secondary.contrastText',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </Avatar>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 800, lineHeight: 1.2 }}>{user?.name}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem', mt: 0.25 }}>{user?.email}</Typography>
+                </Box>
+                <Chip 
+                  label={user?.role} 
+                  size="small" 
+                  color={user?.role === 'Admin' ? 'primary' : 'secondary'}
+                  sx={{ fontWeight: 700, px: 1.5, borderRadius: '6px' }}
+                />
               </Box>
-              <Divider />
-              <MenuItem onClick={handleLogout} sx={{ py: 1 }}>
-                <ListItemIcon>
-                  <LogoutIcon fontSize="small" color="error" />
-                </ListItemIcon>
-                <Typography color="error" fontWeight={600}>Logout</Typography>
+              <Divider sx={{ my: 1.5 }} />
+              <MenuItem onClick={handleLogout} sx={{ 
+                py: 1.2, 
+                borderRadius: '10px',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                '&:hover': {
+                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  '& .logout-text, & .logout-icon': {
+                    color: 'error.main'
+                  }
+                }
+              }}>
+                <LogoutIcon className="logout-icon" fontSize="small" sx={{ color: 'text.secondary', transition: 'all 0.2s' }} />
+                <Typography className="logout-text" sx={{ fontWeight: 750, color: 'text.primary', transition: 'all 0.2s', fontSize: '0.9rem' }}>
+                  Log Out
+                </Typography>
               </MenuItem>
             </Menu>
+
+            {/* Mobile Dropdown Menu (Visible on xs/sm screens) */}
+            <Menu
+              anchorEl={mobileAnchorEl}
+              open={Boolean(mobileAnchorEl)}
+              onClose={handleMobileClose}
+              transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+              anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+              sx={{ mt: 1.5, display: { xs: 'block', md: 'none' } }}
+              slotProps={{
+                paper: {
+                  sx: {
+                    borderRadius: '16px',
+                    minWidth: 200,
+                    p: 1,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    background: theme => theme.palette.mode === 'dark' ? 'rgba(19, 21, 23, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+                    backdropFilter: 'blur(20px)',
+                    backgroundImage: 'none'
+                  }
+                }
+              }}
+            >
+              {menuItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <MenuItem 
+                    key={item.text} 
+                    onClick={() => {
+                      handleMobileClose();
+                      navigate(item.path);
+                    }}
+                    sx={{ 
+                      borderRadius: '10px',
+                      my: 0.5,
+                      py: 1,
+                      color: isActive ? 'primary.main' : 'text.primary',
+                      fontWeight: isActive ? 700 : 500,
+                      backgroundColor: isActive ? 'rgba(201, 168, 76, 0.06)' : 'transparent',
+                    }}
+                  >
+                    <ListItemIcon sx={{ color: isActive ? 'primary.main' : 'text.secondary', minWidth: 32 }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    {item.text}
+                  </MenuItem>
+                );
+              })}
+            </Menu>
+
           </Box>
         </Toolbar>
       </AppBar>
 
-      {/* Navigation Drawer */}
-      <Drawer
-        variant="permanent"
-        open={sidebarOpen}
-        sx={{
-          width: sidebarOpen ? drawerWidth : 74,
-          flexShrink: 0,
-          whiteSpace: 'nowrap',
-          boxSizing: 'border-box',
-          '& .MuiDrawer-paper': {
-            width: sidebarOpen ? drawerWidth : 74,
-            overflowX: 'hidden',
-            transition: (theme) => theme.transitions.create('width', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-            bgcolor: 'background.paper',
-            borderRight: '1px solid',
-            borderColor: 'divider',
-            boxSizing: 'border-box',
-          },
-        }}
-      >
-        <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', px: [1] }}>
-          <Typography variant="subtitle1" className="text-gradient-gold font-extrabold tracking-wider" sx={{ display: sidebarOpen ? 'block' : 'none', letterSpacing: '0.1em' }}>
-            CHURN ANALYTICS
-          </Typography>
-          {!sidebarOpen && (
-            <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, fontSize: '0.85rem', fontWeight: 800, color: 'primary.contrastText' }}>C</Avatar>
-          )}
-        </Toolbar>
-        <Divider />
-        
-        <List sx={{ pt: 2.5, px: 1.5 }}>
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 0.75 }}>
-                <ListItemButton
-                  onClick={() => navigate(item.path)}
-                  sx={{
-                    minHeight: 48,
-                    justifyContent: sidebarOpen ? 'initial' : 'center',
-                    px: 2,
-                    borderRadius: 2.5,
-                    bgcolor: isActive ? 'primary.main' : 'transparent',
-                    color: isActive ? 'primary.contrastText' : 'text.primary',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    '&:hover': {
-                      bgcolor: isActive ? 'primary.main' : 'action.hover',
-                      transform: 'scale(1.02)',
-                    },
-                    '&:active': {
-                      transform: 'scale(0.98)',
-                    }
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: sidebarOpen ? 2.5 : 'auto',
-                      justifyContent: 'center',
-                      color: isActive ? 'primary.contrastText' : 'text.secondary',
-                    }}
-                  >
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={item.text} 
-                    sx={{ opacity: sidebarOpen ? 1 : 0 }} 
-                    primaryTypographyProps={{ style: { fontWeight: isActive ? 800 : 600, fontSize: '0.925rem' } }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
-        </List>
-      </Drawer>
-
       {/* Main Content Workspace */}
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2.5, md: 4 }, mt: 8, overflowX: 'hidden' }}>
+      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2.5, md: 4 }, py: { xs: 4, md: 6 }, overflowX: 'hidden' }}>
         {children}
       </Box>
     </Box>

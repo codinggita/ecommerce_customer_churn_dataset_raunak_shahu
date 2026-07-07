@@ -102,23 +102,61 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
     }
   }, [customer, open]);
 
+  const inputSx = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '12px',
+      transition: 'all 0.2s ease',
+      '&:hover': {
+        borderColor: 'primary.light',
+      },
+      '&.Mui-focused': {
+        '& fieldset': {
+          borderColor: 'primary.main',
+        }
+      }
+    }
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle className="font-bold">
-        {isEdit ? 'Edit Customer File' : 'Add New Customer Profile'}
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="md" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: '16px',
+          border: '1px solid',
+          borderColor: 'divider',
+          backgroundImage: 'none',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.12)',
+          background: theme => theme.palette.mode === 'dark' ? '#131517' : '#ffffff'
+        }
+      }}
+    >
+      <DialogTitle sx={{ py: 2.5, px: 4 }}>
+        <Typography variant="h6" sx={{ fontWeight: 850, color: 'text.primary', letterSpacing: '-0.02em' }}>
+          {isEdit ? 'Edit Customer File' : 'Add New Customer Profile'}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {isEdit ? 'Update demographic and engagement metrics for this customer profile' : 'Create a new customer analytics profile in the database'}
+        </Typography>
       </DialogTitle>
       <Divider />
       
       <form onSubmit={formik.handleSubmit}>
         <DialogContent sx={{ p: 4 }}>
-          {errorMsg && <Alert severity="error" sx={{ mb: 3 }}>{errorMsg}</Alert>}
+          {errorMsg && <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>{errorMsg}</Alert>}
 
           <Grid container spacing={3}>
             {/* Section 1: Demographics */}
             <Grid item xs={12}>
-              <Typography variant="subtitle2" color="primary" className="font-bold">
-                1. Demographics & Identity
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 1 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  1. Demographics & Identity
+                </Typography>
+                <Box sx={{ flexGrow: 1, height: '1px', bgcolor: 'divider' }} />
+              </Box>
             </Grid>
 
             <Grid item xs={12} sm={6}>
@@ -133,6 +171,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={formik.touched.name && formik.errors.name}
+                sx={inputSx}
               />
             </Grid>
 
@@ -148,6 +187,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.email && Boolean(formik.errors.email)}
                 helperText={formik.touched.email && formik.errors.email}
+                sx={inputSx}
               />
             </Grid>
 
@@ -164,11 +204,12 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.age && Boolean(formik.errors.age)}
                 helperText={formik.touched.age && formik.errors.age}
+                sx={inputSx}
               />
             </Grid>
 
             <Grid item xs={12} sm={4}>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth size="small" sx={inputSx}>
                 <InputLabel id="gender-label">Gender</InputLabel>
                 <Select
                   labelId="gender-label"
@@ -186,7 +227,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
             </Grid>
 
             <Grid item xs={12} sm={4}>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth size="small" sx={inputSx}>
                 <InputLabel id="quarter-label">Signup Quarter</InputLabel>
                 <Select
                   labelId="quarter-label"
@@ -216,6 +257,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.country && Boolean(formik.errors.country)}
                 helperText={formik.touched.country && formik.errors.country}
+                sx={inputSx}
               />
             </Grid>
 
@@ -231,16 +273,18 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.city && Boolean(formik.errors.city)}
                 helperText={formik.touched.city && formik.errors.city}
+                sx={inputSx}
               />
             </Grid>
 
-            <Grid item xs={12}><Divider /></Grid>
-
             {/* Section 2: Engagement */}
             <Grid item xs={12}>
-              <Typography variant="subtitle2" color="primary" className="font-bold">
-                2. App Engagement & Customer Service
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  2. App Engagement & Customer Service
+                </Typography>
+                <Box sx={{ flexGrow: 1, height: '1px', bgcolor: 'divider' }} />
+              </Box>
             </Grid>
 
             <Grid item xs={12} sm={4}>
@@ -256,6 +300,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.membershipYears && Boolean(formik.errors.membershipYears)}
                 helperText={formik.touched.membershipYears && formik.errors.membershipYears}
+                sx={inputSx}
               />
             </Grid>
 
@@ -272,6 +317,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.loginFrequency && Boolean(formik.errors.loginFrequency)}
                 helperText={formik.touched.loginFrequency && formik.errors.loginFrequency}
+                sx={inputSx}
               />
             </Grid>
 
@@ -288,6 +334,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.sessionDuration && Boolean(formik.errors.sessionDuration)}
                 helperText={formik.touched.sessionDuration && formik.errors.sessionDuration}
+                sx={inputSx}
               />
             </Grid>
 
@@ -304,6 +351,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.pagesPerSession && Boolean(formik.errors.pagesPerSession)}
                 helperText={formik.touched.pagesPerSession && formik.errors.pagesPerSession}
+                sx={inputSx}
               />
             </Grid>
 
@@ -320,6 +368,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.customerServiceCalls && Boolean(formik.errors.customerServiceCalls)}
                 helperText={formik.touched.customerServiceCalls && formik.errors.customerServiceCalls}
+                sx={inputSx}
               />
             </Grid>
 
@@ -336,16 +385,18 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.emailOpenRate && Boolean(formik.errors.emailOpenRate)}
                 helperText={formik.touched.emailOpenRate && formik.errors.emailOpenRate}
+                sx={inputSx}
               />
             </Grid>
 
-            <Grid item xs={12}><Divider /></Grid>
-
             {/* Section 3: Commercial metrics */}
             <Grid item xs={12}>
-              <Typography variant="subtitle2" color="primary" className="font-bold">
-                3. Commercial Metrics & Status
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mt: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  3. Commercial Metrics & Status
+                </Typography>
+                <Box sx={{ flexGrow: 1, height: '1px', bgcolor: 'divider' }} />
+              </Box>
             </Grid>
 
             <Grid item xs={12} sm={3}>
@@ -361,6 +412,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.purchases && Boolean(formik.errors.purchases)}
                 helperText={formik.touched.purchases && formik.errors.purchases}
+                sx={inputSx}
               />
             </Grid>
 
@@ -377,6 +429,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.averageOrderValue && Boolean(formik.errors.averageOrderValue)}
                 helperText={formik.touched.averageOrderValue && formik.errors.averageOrderValue}
+                sx={inputSx}
               />
             </Grid>
 
@@ -393,6 +446,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.lifetimeValue && Boolean(formik.errors.lifetimeValue)}
                 helperText={formik.touched.lifetimeValue && formik.errors.lifetimeValue}
+                sx={inputSx}
               />
             </Grid>
 
@@ -409,6 +463,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.creditBalance && Boolean(formik.errors.creditBalance)}
                 helperText={formik.touched.creditBalance && formik.errors.creditBalance}
+                sx={inputSx}
               />
             </Grid>
 
@@ -425,6 +480,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.cartAbandonmentRate && Boolean(formik.errors.cartAbandonmentRate)}
                 helperText={formik.touched.cartAbandonmentRate && formik.errors.cartAbandonmentRate}
+                sx={inputSx}
               />
             </Grid>
 
@@ -441,6 +497,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.wishlistItems && Boolean(formik.errors.wishlistItems)}
                 helperText={formik.touched.wishlistItems && formik.errors.wishlistItems}
+                sx={inputSx}
               />
             </Grid>
 
@@ -457,6 +514,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.daysSinceLastPurchase && Boolean(formik.errors.daysSinceLastPurchase)}
                 helperText={formik.touched.daysSinceLastPurchase && formik.errors.daysSinceLastPurchase}
+                sx={inputSx}
               />
             </Grid>
 
@@ -473,6 +531,7 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.discountRate && Boolean(formik.errors.discountRate)}
                 helperText={formik.touched.discountRate && formik.errors.discountRate}
+                sx={inputSx}
               />
             </Grid>
 
@@ -489,11 +548,12 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
                 onBlur={formik.handleBlur}
                 error={formik.touched.returnsRate && Boolean(formik.errors.returnsRate)}
                 helperText={formik.touched.returnsRate && formik.errors.returnsRate}
+                sx={inputSx}
               />
             </Grid>
 
             <Grid item xs={12} sm={4}>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth size="small" sx={inputSx}>
                 <InputLabel id="churned-label">Churn Status</InputLabel>
                 <Select
                   labelId="churned-label"
@@ -511,9 +571,24 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
           </Grid>
         </DialogContent>
         <Divider />
-
-        <DialogActions sx={{ px: 4, py: 2.5 }}>
-          <Button onClick={onClose} color="secondary" variant="outlined" disabled={submitting}>
+ 
+        <DialogActions sx={{ px: 4, py: 2.5, gap: 1.5 }}>
+          <Button 
+            onClick={onClose} 
+            color="secondary" 
+            variant="outlined" 
+            disabled={submitting}
+            sx={{ 
+              borderRadius: '12px',
+              px: 3,
+              borderColor: 'divider',
+              color: 'text.secondary',
+              '&:hover': {
+                borderColor: 'text.secondary',
+                backgroundColor: 'action.hover'
+              }
+            }}
+          >
             Cancel
           </Button>
           <Button 
@@ -521,7 +596,15 @@ export default function CustomerModal({ open, onClose, customer, onSuccess }) {
             variant="contained" 
             color="primary" 
             disabled={submitting}
-            sx={{ minWidth: 100 }}
+            sx={{ 
+              borderRadius: '12px',
+              px: 4,
+              fontWeight: 700,
+              boxShadow: 'none',
+              '&:hover': {
+                boxShadow: '0 4px 14px rgba(201, 168, 76, 0.3)',
+              }
+            }}
           >
             {submitting ? <CircularProgress size={20} color="inherit" /> : 'Save Profile'}
           </Button>
