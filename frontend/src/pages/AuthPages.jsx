@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import {
   Card, CardContent, Typography, TextField, Button, Box, Alert, Stack,
   CircularProgress, MenuItem, FormControl, InputLabel, Select, Grid, useTheme,
-  ListItem, ListItemIcon, ListItemText
+  ListItem, ListItemIcon, ListItemText, Divider
 } from '@mui/material';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import AppRegistrationIcon from '@mui/icons-material/AppRegistration';
@@ -154,7 +154,7 @@ export function Login() {
 
         const { user, token } = response.data.data;
         dispatch(setCredentials({ user, token }));
-        navigate('/');
+        navigate('/dashboard');
       } catch (err) {
         console.error("Login failed:", err);
         setErrorMsg(err.message || 'Login failed. Please check your credentials.');
@@ -345,7 +345,7 @@ export function Register() {
 
         const { user, token } = response.data.data;
         dispatch(setCredentials({ user, token }));
-        navigate('/');
+        navigate('/dashboard');
       } catch (err) {
         console.error("Registration failed:", err);
         setErrorMsg(err.message || 'Registration failed. Please check inputs.');

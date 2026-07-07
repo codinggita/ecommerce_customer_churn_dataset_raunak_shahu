@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { lightTheme, darkTheme } from './theme';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Login, Register } from './pages/AuthPages';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import { Unauthorized, NotFound } from './pages/ErrorPages';
 import AdminInsights from './pages/AdminInsights';
@@ -27,13 +28,14 @@ function App() {
       <Router>
         <Routes>
           {/* Public Routes */}
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Protected Routes (Authenticated users) */}
           <Route 
-            path="/" 
+            path="/dashboard" 
             element={
               <ProtectedRoute>
                 <Dashboard />
