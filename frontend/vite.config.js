@@ -9,7 +9,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api/v1': {
-        target: 'https://ecommerce-customer-churn-dataset-raunak.onrender.com',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       }
