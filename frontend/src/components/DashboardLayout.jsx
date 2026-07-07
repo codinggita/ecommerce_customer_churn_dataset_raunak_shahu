@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }) {
           zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 4 }, py: 0.5 }}>
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 3, sm: 4, md: 5 }, py: 0.5 }}>
           
           {/* Left Side: Logo & Title */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -341,7 +341,13 @@ export default function DashboardLayout({ children }) {
       </AppBar>
 
       {/* Main Content Workspace */}
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2.5, md: 4 }, py: { xs: 4, md: 6 }, overflowX: 'hidden' }}>
+      <Box component="main" sx={{ 
+        flexGrow: 1, 
+        px: { xs: 3, sm: 4, md: 5 }, 
+        pt: { xs: 4, sm: 5, md: 6 }, 
+        pb: { xs: 5, sm: 6, md: 8 },
+        overflowX: 'hidden' 
+      }}>
         {children}
       </Box>
     </Box>
