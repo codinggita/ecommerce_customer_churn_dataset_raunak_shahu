@@ -1,12 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-sans: "Inter", "Outfit", system-ui, -apple-system, sans-serif;
 }
 
 /* Custom premium scrollbars and smooth scroll */
 html {
   scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Custom scrollbar for webkit browsers */
@@ -20,10 +26,66 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.3);
+  background: rgba(142, 147, 154, 0.2);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.5);
+  background: rgba(142, 147, 154, 0.4);
+}
+
+/* Gold Gradient Text */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #e6c364 0%, #c9a84c 50%, #ae8c33 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Dark mode ambient glow backgrounds */
+.dark-ambient-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.dark-ambient-glow::before {
+  content: "";
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 40%;
+  height: 40%;
+  background: radial-gradient(circle, rgba(230, 195, 100, 0.04) 0%, rgba(230, 195, 100, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark-ambient-glow::after {
+  content: "";
+  position: absolute;
+  bottom: -10%;
+  right: -10%;
+  width: 45%;
+  height: 45%;
+  background: radial-gradient(circle, rgba(124, 77, 255, 0.03) 0%, rgba(124, 77, 255, 0) 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Modern inputs focus glow */
+.modern-input-focus:focus-within {
+  box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.12);
+}
+
+/* Tactile scaling interactive effects */
+.hover-scale-effect {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.hover-scale-effect:hover {
+  transform: translateY(-2px);
+}
+
+.active-shrink-effect:active {
+  transform: scale(0.98);
 }
