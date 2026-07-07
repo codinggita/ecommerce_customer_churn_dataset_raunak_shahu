@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Card, CardContent, Typography, Grid, Skeleton, Alert, Stack,
-  useTheme, Divider, Chip
+  Box, Card, CardContent, Typography, Grid, Skeleton, Alert, Divider, useTheme
 } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
@@ -26,19 +25,20 @@ import {
   Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area
 } from 'recharts';
 
-// ─── Color Palette ────────────────────────────────────────────────────────────
+// ─── LexIndia Inspired Palette ────────────────────────────────────────────────
 const PALETTE = {
-  indigo:  '#6366f1',
-  rose:    '#f43f5e',
-  emerald: '#10b981',
-  amber:   '#f59e0b',
-  sky:     '#0ea5e9',
-  violet:  '#8b5cf6',
-  pink:    '#ec4899',
-  teal:    '#14b8a6',
+  gold:    '#c9a84c', // Primary Gold
+  violet:  '#7c4dff', // Secondary Purple
+  emerald: '#10b981', // Success
+  rose:    '#f43f5e', // Error/Churned
+  sky:     '#0ea5e9', // Info
+  amber:   '#f59e0b', // Accent Warning
+  pink:    '#ec4899', // Decorative Accent
+  teal:    '#14b8a6', // Clean Teal
 };
 
-const GENDER_COLORS = ['#6366f1', '#ec4899', '#10b981', '#f59e0b'];
+const CHURN_COLORS = [PALETTE.emerald, PALETTE.rose];
+const GENDER_COLORS = [PALETTE.gold, PALETTE.pink, PALETTE.violet, PALETTE.teal];
 
 // ─── Stat Card Component ───────────────────────────────────────────────────────
 function StatCard({ title, value, icon, color, desc, loading }) {
@@ -47,19 +47,24 @@ function StatCard({ title, value, icon, color, desc, loading }) {
       sx={{
         borderLeft: `4px solid ${color}`,
         height: '100%',
-        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-        '&:hover': { transform: 'translateY(-2px)', boxShadow: 4 },
+        bgcolor: 'background.paper',
+        borderColor: 'divider',
+        transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': { 
+          transform: 'translateY(-2px)', 
+          boxShadow: '0 4px 20px rgba(0,0,0,0.05)'
+        },
       }}
     >
       <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2.5 }}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle2" color="text.secondary" fontWeight={600} noWrap>
+          <Typography variant="subtitle2" color="text.secondary" fontWeight={700} noWrap>
             {title}
           </Typography>
           {loading ? (
             <Skeleton variant="text" width={80} height={48} />
           ) : (
-            <Typography variant="h4" fontWeight={800} sx={{ my: 0.5, lineHeight: 1.1 }}>
+            <Typography variant="h4" fontWeight={900} sx={{ my: 0.5, lineHeight: 1.1 }}>
               {value}
             </Typography>
           )}
@@ -70,12 +75,14 @@ function StatCard({ title, value, icon, color, desc, loading }) {
         <Box
           sx={{
             color,
-            bgcolor: `${color}18`,
+            bgcolor: `${color}12`,
             p: 1.5,
             borderRadius: '50%',
             display: 'flex',
             flexShrink: 0,
             ml: 1,
+            border: '1px solid',
+            borderColor: `${color}25`
           }}
         >
           {icon}
@@ -89,7 +96,7 @@ function StatCard({ title, value, icon, color, desc, loading }) {
 function ChartHeader({ title, subtitle }) {
   return (
     <Box sx={{ mb: 2 }}>
-      <Typography variant="h6" fontWeight={700}>{title}</Typography>
+      <Typography variant="h6" fontWeight={800} letterSpacing={-0.3}>{title}</Typography>
       {subtitle && (
         <Typography variant="caption" color="text.secondary">{subtitle}</Typography>
       )}
@@ -138,7 +145,6 @@ export default function Dashboard() {
     setError(null);
 
     try {
-      // Fetch all endpoints in parallel
       const [
         countRes, churnCountRes, avgAgeRes, avgLTVRes,
         avgOrderRes, avgCreditRes, reviewCountRes, mobileRes,
@@ -158,7 +164,6 @@ export default function Dashboard() {
         api.get('/stats/customers/gender-count'),
       ]);
 
-      // ── Stats Cards
       const total    = countRes.data.data?.count ?? 0;
       const churnArr = churnCountRes.data.data ?? [];
       const churned  = churnArr.find(g => g._id === 1)?.count ?? 0;
@@ -177,7 +182,6 @@ export default function Dashboard() {
         avgMobileUsage:   mobileRes.data.data?.averageMobileUsage?.toFixed(1) ?? '—',
       });
 
-      // ── Chart data
       setChurnData(churnAnalysisRes.data.data ?? []);
       setCountryData((countryRes.data.data ?? []).slice(0, 8));
       setSignupData(signupRes.data.data ?? []);
@@ -202,7 +206,6 @@ export default function Dashboard() {
     { name: 'Active',  value: stats.activeCount  ?? 0 },
     { name: 'Churned', value: stats.churnedCount ?? 0 },
   ];
-  const churnPieColors = [PALETTE.emerald, PALETTE.rose];
 
   const genderPieData = genderData.map(g => ({ name: g._id || 'Unknown', value: g.count }));
 
@@ -214,13 +217,12 @@ export default function Dashboard() {
     }))
     .sort((a, b) => a.quarter.localeCompare(b.quarter));
 
-  // ── Stat cards definition ──────────────────────────────────────────────────
   const statsCards = [
     {
       title: 'Total Customers',
       value: loading ? null : fmtNumber(stats.totalCustomers),
       icon:  <PeopleIcon sx={{ fontSize: 28 }} />,
-      color: PALETTE.indigo,
+      color: PALETTE.gold,
       desc:  'Active records in database',
     },
     {
@@ -241,7 +243,7 @@ export default function Dashboard() {
       title: 'Avg Order Value',
       value: loading ? null : fmtCurrency(stats.avgOrderValue),
       icon:  <TrendingUpIcon sx={{ fontSize: 28 }} />,
-      color: PALETTE.amber,
+      color: PALETTE.violet,
       desc:  'Average spend per order',
     },
     {
@@ -255,14 +257,14 @@ export default function Dashboard() {
       title: 'Avg Credit Balance',
       value: loading ? null : fmtCurrency(stats.avgCreditBalance),
       icon:  <AccountBalanceWalletIcon sx={{ fontSize: 28 }} />,
-      color: PALETTE.violet,
+      color: PALETTE.pink,
       desc:  'Avg wallet credit balance',
     },
     {
       title: 'Total Reviews',
       value: loading ? null : fmtNumber(stats.totalReviews),
       icon:  <StarIcon sx={{ fontSize: 28 }} />,
-      color: PALETTE.pink,
+      color: PALETTE.amber,
       desc:  'Product reviews written',
     },
     {
@@ -274,7 +276,6 @@ export default function Dashboard() {
     },
   ];
 
-  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <DashboardLayout>
       <Box sx={{ width: '100%' }}>
@@ -282,27 +283,27 @@ export default function Dashboard() {
         {/* ── Page Header ── */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'primary.main', display: 'flex', color: 'white' }}>
+            <Box sx={{ p: 1.25, borderRadius: 3, bgcolor: 'primary.main', display: 'flex', color: 'primary.contrastText', boxShadow: '0 2px 10px rgba(201,168,76,0.2)' }}>
               <DashboardIcon sx={{ fontSize: 26 }} />
             </Box>
             <Box>
-              <Typography variant="h5" fontWeight={800} letterSpacing={-0.5}>
+              <Typography variant="h5" fontWeight={850} letterSpacing={-0.5}>
                 Executive Churn Intelligence
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Live stats from MongoDB — {fmtNumber(stats.totalCustomers)} records
+                Live statistics from MongoDB — {fmtNumber(stats.totalCustomers)} records
               </Typography>
             </Box>
           </Box>
 
           <Tooltip title="Refresh dashboard">
-            <IconButton onClick={loadDashboard} disabled={loading} color="primary">
+            <IconButton onClick={loadDashboard} disabled={loading} color="primary" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
               <RefreshIcon />
             </IconButton>
           </Tooltip>
         </Box>
 
-        {error && <Alert severity="warning" sx={{ mb: 3 }}>{error}</Alert>}
+        {error && <Alert severity="warning" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
         {/* ── Stat Cards — Row 1 ── */}
         <Grid container spacing={2.5} sx={{ mb: 2.5 }}>
@@ -330,7 +331,7 @@ export default function Dashboard() {
           {/* Churn Status Distribution */}
           <Grid item xs={12} md={6}>
             <Card sx={{ height: 380 }}>
-              <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
                 <ChartHeader
                   title="Churn Status Distribution"
                   subtitle={`${stats.churnRate}% overall churn rate`}
@@ -338,7 +339,7 @@ export default function Dashboard() {
                 {loading ? (
                   <Skeleton variant="rectangular" sx={{ flexGrow: 1, borderRadius: 2 }} />
                 ) : (
-                  <Box sx={{ flexGrow: 1 }}>
+                  <Box sx={{ flexGrow: 1, minHeight: 0 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -346,16 +347,25 @@ export default function Dashboard() {
                           cx="50%"
                           cy="45%"
                           innerRadius={65}
-                          outerRadius={100}
+                          outerRadius={95}
                           paddingAngle={4}
                           dataKey="value"
                         >
                           {churnPieData.map((_, i) => (
-                            <Cell key={i} fill={churnPieColors[i]} />
+                            <Cell key={i} fill={CHURN_COLORS[i]} />
                           ))}
                         </Pie>
-                        <RechartTooltip formatter={(v, n) => [v.toLocaleString(), n]} />
-                        <Legend verticalAlign="bottom" height={36} />
+                        <RechartTooltip 
+                          contentStyle={{
+                            borderRadius: 12,
+                            border: '1px solid',
+                            borderColor: theme.palette.divider,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                            backgroundColor: theme.palette.background.paper
+                          }}
+                          formatter={(v, n) => [v.toLocaleString(), n]} 
+                        />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" />
                       </PieChart>
                     </ResponsiveContainer>
                   </Box>
@@ -367,7 +377,7 @@ export default function Dashboard() {
           {/* Gender Distribution */}
           <Grid item xs={12} md={6}>
             <Card sx={{ height: 380 }}>
-              <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
                 <ChartHeader
                   title="Gender Distribution"
                   subtitle="Customer breakdown by gender"
@@ -379,7 +389,7 @@ export default function Dashboard() {
                     <Typography color="text.secondary">No gender data available</Typography>
                   </Box>
                 ) : (
-                  <Box sx={{ flexGrow: 1 }}>
+                  <Box sx={{ flexGrow: 1, minHeight: 0 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -387,18 +397,25 @@ export default function Dashboard() {
                           cx="50%"
                           cy="45%"
                           innerRadius={65}
-                          outerRadius={100}
+                          outerRadius={95}
                           paddingAngle={4}
                           dataKey="value"
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          labelLine={false}
                         >
                           {genderPieData.map((_, i) => (
                             <Cell key={i} fill={GENDER_COLORS[i % GENDER_COLORS.length]} />
                           ))}
                         </Pie>
-                        <RechartTooltip formatter={(v, n) => [v.toLocaleString(), n]} />
-                        <Legend verticalAlign="bottom" height={36} />
+                        <RechartTooltip 
+                          contentStyle={{
+                            borderRadius: 12,
+                            border: '1px solid',
+                            borderColor: theme.palette.divider,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                            backgroundColor: theme.palette.background.paper
+                          }}
+                          formatter={(v, n) => [v.toLocaleString(), n]} 
+                        />
+                        <Legend verticalAlign="bottom" height={36} iconType="circle" />
                       </PieChart>
                     </ResponsiveContainer>
                   </Box>
@@ -412,7 +429,7 @@ export default function Dashboard() {
         <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid item xs={12}>
             <Card sx={{ height: 380 }}>
-              <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
                 <ChartHeader
                   title="Signup Cohort Trends"
                   subtitle="Customer signups grouped by quarter"
@@ -424,26 +441,32 @@ export default function Dashboard() {
                     <Typography color="text.secondary">No signup trend data available</Typography>
                   </Box>
                 ) : (
-                  <Box sx={{ flexGrow: 1 }}>
+                  <Box sx={{ flexGrow: 1, minHeight: 0 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={signupChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                         <defs>
                           <linearGradient id="colorSignup" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%"  stopColor={PALETTE.indigo} stopOpacity={0.8} />
-                            <stop offset="95%" stopColor={PALETTE.indigo} stopOpacity={0.05} />
+                            <stop offset="5%"  stopColor={PALETTE.gold} stopOpacity={0.4} />
+                            <stop offset="95%" stopColor={PALETTE.gold} stopOpacity={0.01} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                        <XAxis dataKey="quarter" stroke={theme.palette.text.secondary} tick={{ fontSize: 12 }} />
-                        <YAxis stroke={theme.palette.text.secondary} tick={{ fontSize: 12 }} />
+                        <XAxis dataKey="quarter" stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
+                        <YAxis stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                         <RechartTooltip
-                          contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
+                          contentStyle={{
+                            borderRadius: 12,
+                            border: '1px solid',
+                            borderColor: theme.palette.divider,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                            backgroundColor: theme.palette.background.paper
+                          }}
                           formatter={(v) => [v.toLocaleString(), 'Signups']}
                         />
                         <Area
                           type="monotone"
                           dataKey="customers"
-                          stroke={PALETTE.indigo}
+                          stroke={PALETTE.gold}
                           strokeWidth={2.5}
                           fillOpacity={1}
                           fill="url(#colorSignup)"
@@ -461,7 +484,7 @@ export default function Dashboard() {
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Card sx={{ height: 420 }}>
-              <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
                 <ChartHeader
                   title="Country Market Performance"
                   subtitle="Customer count vs Average LTV by country (top 8)"
@@ -473,22 +496,28 @@ export default function Dashboard() {
                     <Typography color="text.secondary">No country data available</Typography>
                   </Box>
                 ) : (
-                  <Box sx={{ flexGrow: 1 }}>
+                  <Box sx={{ flexGrow: 1, minHeight: 0 }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={countryData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-                        <XAxis dataKey="_id" stroke={theme.palette.text.secondary} tick={{ fontSize: 12 }} />
-                        <YAxis stroke={theme.palette.text.secondary} tick={{ fontSize: 12 }} />
+                        <XAxis dataKey="_id" stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
+                        <YAxis stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                         <RechartTooltip
-                          contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
+                          contentStyle={{
+                            borderRadius: 12,
+                            border: '1px solid',
+                            borderColor: theme.palette.divider,
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                            backgroundColor: theme.palette.background.paper
+                          }}
                           formatter={(value, name) => {
                             if (name === 'averageLifetimeValue') return [fmtCurrency(value), 'Avg LTV'];
                             return [value.toLocaleString(), 'Customer Count'];
                           }}
                         />
-                        <Legend />
-                        <Bar dataKey="count"                name="Customer Count"  fill={PALETTE.indigo}  radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="averageLifetimeValue" name="Average LTV"     fill={PALETTE.emerald} radius={[4, 4, 0, 0]} />
+                        <Legend iconType="circle" />
+                        <Bar dataKey="count"                name="Customer Count"  fill={PALETTE.violet} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="averageLifetimeValue" name="Average LTV"     fill={PALETTE.gold}   radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </Box>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box, Card, CardContent, Typography, Grid, Skeleton, Alert, Stack,
-  useTheme, Divider, Button
+  Box, Card, CardContent, Typography, Grid, Skeleton, Alert, Divider, useTheme
 } from '@mui/material';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -16,29 +15,29 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip as RechartTooltip, Legend, Cell, PieChart, Pie
 } from 'recharts';
 
-// ─── Color Palette ────────────────────────────────────────────────────────────
+// ─── LexIndia Inspired Palette ────────────────────────────────────────────────
 const PALETTE = {
-  indigo:  '#6366f1',
-  rose:    '#f43f5e',
-  emerald: '#10b981',
-  amber:   '#f59e0b',
-  sky:     '#0ea5e9',
-  violet: '#8b5cf6',
-  pink:    '#ec4899',
-  teal:    '#14b8a6',
+  gold:    '#c9a84c', // Primary Gold
+  violet:  '#7c4dff', // Secondary Purple
+  emerald: '#10b981', // Success
+  rose:    '#f43f5e', // Risk red
+  sky:     '#0ea5e9', // Sky blue
+  amber:   '#f59e0b', // Accent warning
+  pink:    '#ec4899', // Pink accent
+  teal:    '#14b8a6', // Teal accent
 };
 
 const CHART_COLORS = [
-  PALETTE.indigo, PALETTE.rose, PALETTE.emerald, PALETTE.amber,
-  PALETTE.sky, PALETTE.violet, PALETTE.pink, PALETTE.teal
+  PALETTE.gold, PALETTE.violet, PALETTE.emerald, PALETTE.sky,
+  PALETTE.pink, PALETTE.teal, PALETTE.amber, PALETTE.rose
 ];
 
 function ChartCard({ title, subtitle, loading, children }) {
   return (
-    <Card sx={{ height: 400, display: 'flex', flexDirection: 'column' }}>
+    <Card sx={{ height: 400, display: 'flex', flexDirection: 'column', borderColor: 'divider' }}>
       <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 3 }}>
         <Box sx={{ mb: 2 }}>
-          <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>{title}</Typography>
+          <Typography variant="h6" fontWeight={800} letterSpacing={-0.3} sx={{ lineHeight: 1.2 }}>{title}</Typography>
           {subtitle && (
             <Typography variant="caption" color="text.secondary">{subtitle}</Typography>
           )}
@@ -149,6 +148,14 @@ export default function Analytics() {
     avgAbandonment: Math.round(c.averageCartAbandonmentRate)
   }));
 
+  const customTooltipStyle = {
+    borderRadius: 12,
+    border: '1px solid',
+    borderColor: theme.palette.divider,
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    backgroundColor: theme.palette.background.paper
+  };
+
   return (
     <DashboardLayout>
       <Box sx={{ width: '100%' }}>
@@ -156,11 +163,11 @@ export default function Analytics() {
         {/* ── Page Header ── */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'primary.main', display: 'flex', color: 'white' }}>
+            <Box sx={{ p: 1.25, borderRadius: 3, bgcolor: 'primary.main', display: 'flex', color: 'primary.contrastText', boxShadow: '0 2px 10px rgba(201,168,76,0.2)' }}>
               <BarChartIcon sx={{ fontSize: 26 }} />
             </Box>
             <Box>
-              <Typography variant="h5" fontWeight={800} letterSpacing={-0.5}>
+              <Typography variant="h5" fontWeight={850} letterSpacing={-0.5}>
                 Analytics Deep Dive
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -170,13 +177,13 @@ export default function Analytics() {
           </Box>
 
           <Tooltip title="Reload analytics">
-            <IconButton onClick={loadAnalyticsData} disabled={loading} color="primary">
+            <IconButton onClick={loadAnalyticsData} disabled={loading} color="primary" sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 3 }}>
               <RefreshIcon />
             </IconButton>
           </Tooltip>
         </Box>
 
-        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
         {/* ── Charts Grid ── */}
         <Grid container spacing={3}>
@@ -194,10 +201,10 @@ export default function Analytics() {
                   <XAxis dataKey="_id" stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <YAxis stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <RechartTooltip
-                    contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
+                    contentStyle={customTooltipStyle}
                     formatter={(v) => [v.toLocaleString(), 'Customers']}
                   />
-                  <Bar dataKey="count" name="Customers" fill={PALETTE.indigo} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" name="Customers" fill={PALETTE.gold} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -216,7 +223,7 @@ export default function Analytics() {
                   <XAxis type="number" stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <YAxis dataKey="_id" type="category" stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <RechartTooltip
-                    contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
+                    contentStyle={customTooltipStyle}
                     formatter={(v) => [v.toLocaleString(), 'Customers']}
                   />
                   <Bar dataKey="count" name="Customers" fill={PALETTE.sky} radius={[0, 4, 4, 0]} barSize={15} />
@@ -228,7 +235,7 @@ export default function Analytics() {
           {/* Chart 3: Signup Growth Trends */}
           <Grid item xs={12} md={6}>
             <ChartCard
-              title="Signup growth trend"
+              title="Signup Growth Trend"
               subtitle="New user registrations grouped by quarter"
               loading={loading}
             >
@@ -236,18 +243,18 @@ export default function Analytics() {
                 <AreaChart data={signupData.sort((a,b) => a._id.localeCompare(b._id))}>
                   <defs>
                     <linearGradient id="colorSignupArea" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={PALETTE.emerald} stopOpacity={0.8} />
-                      <stop offset="95%" stopColor={PALETTE.emerald} stopOpacity={0.05} />
+                      <stop offset="5%" stopColor={PALETTE.violet} stopOpacity={0.4} />
+                      <stop offset="95%" stopColor={PALETTE.violet} stopOpacity={0.01} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
                   <XAxis dataKey="_id" stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <YAxis stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <RechartTooltip
-                    contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
+                    contentStyle={customTooltipStyle}
                     formatter={(v) => [v.toLocaleString(), 'Signups']}
                   />
-                  <Area type="monotone" dataKey="count" stroke={PALETTE.emerald} strokeWidth={2.5} fillOpacity={1} fill="url(#colorSignupArea)" />
+                  <Area type="monotone" dataKey="count" stroke={PALETTE.violet} strokeWidth={2.5} fillOpacity={1} fill="url(#colorSignupArea)" />
                 </AreaChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -266,9 +273,9 @@ export default function Analytics() {
                   <XAxis dataKey="quarter" stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <YAxis stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <RechartTooltip
-                    contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
+                    contentStyle={customTooltipStyle}
                   />
-                  <Legend />
+                  <Legend iconType="circle" />
                   <Bar dataKey="active" name="Active" fill={PALETTE.emerald} stackId="a" radius={[0, 0, 0, 0]} />
                   <Bar dataKey="churned" name="Churned" fill={PALETTE.rose} stackId="a" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -289,10 +296,10 @@ export default function Analytics() {
                   <XAxis dataKey="_id" stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <YAxis stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <RechartTooltip
-                    contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
+                    contentStyle={customTooltipStyle}
                     formatter={(v) => [v.toLocaleString(), 'Customers']}
                   />
-                  <Bar dataKey="count" name="Customers" fill={PALETTE.amber} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" name="Customers" fill={PALETTE.violet} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -312,7 +319,7 @@ export default function Analytics() {
                     cx="50%"
                     cy="45%"
                     innerRadius={60}
-                    outerRadius={90}
+                    outerRadius={95}
                     paddingAngle={4}
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
@@ -322,7 +329,10 @@ export default function Analytics() {
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                     ))}
                   </Pie>
-                  <RechartTooltip formatter={(v) => [v.toLocaleString(), 'Users']} />
+                  <RechartTooltip 
+                    contentStyle={customTooltipStyle}
+                    formatter={(v) => [v.toLocaleString(), 'Users']} 
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -341,10 +351,10 @@ export default function Analytics() {
                   <XAxis dataKey="membership" stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <YAxis stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <RechartTooltip
-                    contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
+                    contentStyle={customTooltipStyle}
                     formatter={(v) => [`${v} mins`, 'Avg Session Length']}
                   />
-                  <Line type="monotone" dataKey="duration" name="Duration" stroke={PALETTE.violet} strokeWidth={2.5} activeDot={{ r: 8 }} />
+                  <Line type="monotone" dataKey="duration" name="Duration" stroke={PALETTE.gold} strokeWidth={2.5} activeDot={{ r: 8 }} />
                 </LineChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -363,9 +373,9 @@ export default function Analytics() {
                   <XAxis dataKey="status" stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <YAxis stroke={theme.palette.text.secondary} tick={{ fontSize: 11 }} />
                   <RechartTooltip
-                    contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' }}
+                    contentStyle={customTooltipStyle}
                   />
-                  <Legend />
+                  <Legend iconType="circle" />
                   <Bar dataKey="avgAbandonment" name="Cart Abandonment Rate %" fill={PALETTE.rose} radius={[4, 4, 0, 0]} />
                   <Bar dataKey="avgCalls" name="Customer Service Calls (Mean)" fill={PALETTE.teal} radius={[4, 4, 0, 0]} />
                 </BarChart>
