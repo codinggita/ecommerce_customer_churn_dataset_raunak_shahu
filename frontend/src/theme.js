@@ -2,36 +2,50 @@ import { createTheme } from '@mui/material/styles';
 
 const baseThemeOptions = {
   typography: {
-    fontFamily: '"Inter", "system-ui", "-apple-system", sans-serif',
+    fontFamily: '"Inter", "Outfit", "system-ui", "-apple-system", sans-serif',
     h1: {
+      fontWeight: 900,
+      letterSpacing: '-0.03em',
+    },
+    h2: {
       fontWeight: 800,
       letterSpacing: '-0.025em',
     },
-    h2: {
+    h3: {
+      fontWeight: 800,
+      letterSpacing: '-0.02em',
+    },
+    h4: {
       fontWeight: 700,
       letterSpacing: '-0.02em',
     },
-    h3: {
-      fontWeight: 700,
-      letterSpacing: '-0.015em',
-    },
-    h4: {
-      fontWeight: 600,
-      letterSpacing: '-0.015em',
-    },
     h5: {
-      fontWeight: 600,
+      fontWeight: 700,
+      letterSpacing: '-0.01em',
     },
     h6: {
+      fontWeight: 700,
+    },
+    subtitle1: {
       fontWeight: 600,
+    },
+    subtitle2: {
+      fontWeight: 600,
+    },
+    body1: {
+      letterSpacing: '-0.01em',
+    },
+    body2: {
+      letterSpacing: '-0.01em',
     },
     button: {
       textTransform: 'none',
-      fontWeight: 500,
+      fontWeight: 600,
+      letterSpacing: '-0.01em',
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 16,
   },
 };
 
@@ -40,36 +54,41 @@ export const lightTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#6366f1', // Indigo 500
-      light: '#818cf8',
-      dark: '#4f46e5',
+      main: '#c9a84c', // LexIndia Gold
+      light: '#dfbe63',
+      dark: '#ae8c33',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#ec4899', // Pink 500
-      light: '#f472b6',
-      dark: '#db2777',
+      main: '#7c4dff', // Purple Accent
+      light: '#9e7cff',
+      dark: '#582ecc',
       contrastText: '#ffffff',
     },
     background: {
-      default: '#f8fafc', // Slate 50
+      default: '#f6f8fa', // Off-white
       paper: '#ffffff',
     },
     text: {
-      primary: '#0f172a', // Slate 900
-      secondary: '#475569', // Slate 600
+      primary: '#0e1113', // Deep gray
+      secondary: '#4f5e6b', // Muted slate
     },
-    divider: '#e2e8f0', // Slate 200
+    divider: '#e3e7eb',
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          padding: '8px 16px',
+          borderRadius: 12,
+          padding: '10px 20px',
           boxShadow: 'none',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
-            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05)',
+            boxShadow: '0 4px 12px rgba(201, 168, 76, 0.15)',
+            transform: 'translateY(-1px)',
+          },
+          '&:active': {
+            transform: 'translateY(0) scale(0.98)',
           },
         },
       },
@@ -77,9 +96,17 @@ export const lightTheme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05)',
-          border: '1px solid #e2e8f0',
+          borderRadius: 16,
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(142, 147, 154, 0.08)',
+          border: '1px solid #e9ecf0',
+          backgroundImage: 'none',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
         },
       },
     },
@@ -91,44 +118,59 @@ export const darkTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#818cf8', // Indigo 400
-      light: '#a5b4fc',
-      dark: '#4f46e5',
-      contrastText: '#0f172a',
+      main: '#e6c364', // Brighter Gold for Dark Mode
+      light: '#edd48a',
+      dark: '#c9a84c',
+      contrastText: '#0f1011',
     },
     secondary: {
-      main: '#f472b6', // Pink 400
-      light: '#f9a8d4',
-      dark: '#db2777',
-      contrastText: '#0f172a',
+      main: '#a78bfa', // Lavender
+      light: '#c084fc',
+      dark: '#7c4dff',
+      contrastText: '#0f1011',
     },
     background: {
-      default: '#0f172a', // Slate 900
-      paper: '#1e293b', // Slate 800
+      default: '#0c0d0e', // Pure Deep Charcoal
+      paper: '#131517', // Elevate dark paper
     },
     text: {
-      primary: '#f8fafc', // Slate 50
-      secondary: '#94a3b8', // Slate 400
+      primary: '#f1f3f5',
+      secondary: '#919da9',
     },
-    divider: '#334155', // Slate 700
+    divider: 'rgba(255, 255, 255, 0.08)',
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          padding: '8px 16px',
+          borderRadius: 12,
+          padding: '10px 20px',
           boxShadow: 'none',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            boxShadow: '0 4px 12px rgba(230, 195, 100, 0.15)',
+            transform: 'translateY(-1px)',
+          },
+          '&:active': {
+            transform: 'translateY(0) scale(0.98)',
+          },
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: 'none',
+          borderRadius: 16,
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           backgroundImage: 'none',
-          border: '1px solid #334155',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
         },
       },
     },

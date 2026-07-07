@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton, 
-  ListItem, ListItemButton, ListItemIcon, ListItemText, Avatar, Menu, MenuItem, Tooltip 
+  ListItem, ListItemButton, ListItemIcon, ListItemText, Avatar, Menu, MenuItem, Tooltip, useTheme
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -14,7 +14,6 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { toggleSidebar, toggleTheme, clearCredentials } from '../store/slices';
 
 const drawerWidth = 260;
@@ -23,6 +22,7 @@ export default function DashboardLayout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const theme = useTheme();
   
   const { user } = useSelector((state) => state.auth);
   const { sidebarOpen, themeMode } = useSelector((state) => state.ui);
@@ -48,6 +48,7 @@ export default function DashboardLayout({ children }) {
     switch(location.pathname) {
       case '/': return 'Dashboard Overview';
       case '/customers': return 'Customer Database';
+      case '/analytics': return 'Analytics Deep Dive';
       case '/admin-insights': return 'Administrative Insights';
       default: return 'Customer Analytics';
     }
@@ -66,6 +67,7 @@ export default function DashboardLayout({ children }) {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default', transition: 'all 0.3s ease' }}>
+      
       {/* Top AppBar */}
       <AppBar
         position="fixed"
@@ -85,23 +87,23 @@ export default function DashboardLayout({ children }) {
           }),
           bgcolor: 'background.paper',
           color: 'text.primary',
-          boxShadow: '0 1px 3px 0 rgba(0,0,0,0.05)',
+          boxShadow: 'none',
           borderBottom: '1px solid',
           borderColor: 'divider',
         }}
       >
         <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', itemsCenter: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <IconButton
               color="inherit"
               aria-label="toggle drawer"
               onClick={() => dispatch(toggleSidebar())}
               edge="start"
-              sx={{ mr: 1 }}
+              sx={{ mr: 1, '&:hover': { transform: 'scale(1.05)' }, '&:active': { transform: 'scale(0.95)' } }}
             >
               {sidebarOpen ? <ChevronLeftIcon /> : <MenuIcon />}
             </IconButton>
-            <Typography variant="h6" noWrap component="div" className="font-extrabold self-center">
+            <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 850, letterSpacing: '-0.02em' }}>
               {getPageTitle()}
             </Typography>
           </Box>
@@ -109,21 +111,27 @@ export default function DashboardLayout({ children }) {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {/* Theme Toggle Button */}
             <Tooltip title={`Switch to ${themeMode === 'light' ? 'Dark' : 'Light'} Mode`}>
-              <IconButton onClick={() => dispatch(toggleTheme())} color="inherit">
+              <IconButton 
+                onClick={() => dispatch(toggleTheme())} 
+                color="inherit"
+                sx={{ '&:hover': { transform: 'rotate(15deg) scale(1.05)' }, '&:active': { transform: 'scale(0.95)' }, transition: 'all 0.2s' }}
+              >
                 {themeMode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
               </IconButton>
             </Tooltip>
 
             {/* Profile Menu Trigger */}
             <Tooltip title="Account Settings">
-              <IconButton onClick={handleMenuOpen} sx={{ p: 0 }}>
+              <IconButton onClick={handleMenuOpen} sx={{ p: 0, '&:hover': { transform: 'scale(1.05)' }, transition: 'all 0.2s' }}>
                 <Avatar 
                   sx={{ 
                     bgcolor: user?.role === 'Admin' ? 'primary.main' : 'secondary.main',
                     width: 38,
                     height: 38,
                     fontSize: '1rem',
-                    fontWeight: 600,
+                    fontWeight: 700,
+                    color: user?.role === 'Admin' ? 'primary.contrastText' : 'secondary.contrastText',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                   }}
                 >
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
@@ -137,28 +145,32 @@ export default function DashboardLayout({ children }) {
               onClose={handleMenuClose}
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-              sx={{ mt: 1 }}
+              sx={{ mt: 1.5 }}
               slotProps={{
                 paper: {
                   sx: {
-                    borderRadius: 2,
-                    minWidth: 180,
+                    borderRadius: 3,
+                    minWidth: 190,
                     boxShadow: '0 4px 20px 0 rgba(0,0,0,0.08)',
+                    border: '1px solid',
+                    borderColor: 'divider',
                   }
                 }
               }}
             >
               <Box sx={{ px: 2, py: 1.5 }}>
-                <Typography variant="subtitle2" noWrap className="font-bold">{user?.name}</Typography>
+                <Typography variant="subtitle2" noWrap sx={{ fontWeight: 800 }}>{user?.name}</Typography>
                 <Typography variant="body2" color="text.secondary" noWrap sx={{ fontSize: '0.75rem' }}>{user?.email}</Typography>
-                <Typography variant="caption" color="primary" sx={{ display: 'block', fontWeight: 600, mt: 0.5 }}>{user?.role}</Typography>
+                <Typography variant="caption" color="primary" sx={{ display: 'block', fontWeight: 700, mt: 0.5, letterSpacing: '0.05em' }}>
+                  {user?.role?.toUpperCase()}
+                </Typography>
               </Box>
               <Divider />
-              <MenuItem onClick={handleLogout}>
+              <MenuItem onClick={handleLogout} sx={{ py: 1 }}>
                 <ListItemIcon>
                   <LogoutIcon fontSize="small" color="error" />
                 </ListItemIcon>
-                <Typography color="error">Logout</Typography>
+                <Typography color="error" fontWeight={600}>Logout</Typography>
               </MenuItem>
             </Menu>
           </Box>
@@ -170,12 +182,12 @@ export default function DashboardLayout({ children }) {
         variant="permanent"
         open={sidebarOpen}
         sx={{
-          width: sidebarOpen ? drawerWidth : 70,
+          width: sidebarOpen ? drawerWidth : 74,
           flexShrink: 0,
           whiteSpace: 'nowrap',
           boxSizing: 'border-box',
           '& .MuiDrawer-paper': {
-            width: sidebarOpen ? drawerWidth : 70,
+            width: sidebarOpen ? drawerWidth : 74,
             overflowX: 'hidden',
             transition: (theme) => theme.transitions.create('width', {
               easing: theme.transitions.easing.sharp,
@@ -189,39 +201,43 @@ export default function DashboardLayout({ children }) {
         }}
       >
         <Toolbar sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', px: [1] }}>
-          <Typography variant="subtitle1" className="font-black tracking-wider text-indigo-500" sx={{ display: sidebarOpen ? 'block' : 'none' }}>
+          <Typography variant="subtitle1" className="text-gradient-gold font-extrabold tracking-wider" sx={{ display: sidebarOpen ? 'block' : 'none', letterSpacing: '0.1em' }}>
             CHURN ANALYTICS
           </Typography>
           {!sidebarOpen && (
-            <Avatar sx={{ bgcolor: 'primary.main', width: 30, height: 30, fontSize: '0.8rem' }}>C</Avatar>
+            <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, fontSize: '0.85rem', fontWeight: 800, color: 'primary.contrastText' }}>C</Avatar>
           )}
         </Toolbar>
         <Divider />
         
-        <List sx={{ pt: 2 }}>
+        <List sx={{ pt: 2.5, px: 1.5 }}>
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
-              <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 0.5 }}>
+              <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 0.75 }}>
                 <ListItemButton
                   onClick={() => navigate(item.path)}
                   sx={{
                     minHeight: 48,
                     justifyContent: sidebarOpen ? 'initial' : 'center',
-                    px: 2.5,
-                    mx: 1,
-                    borderRadius: 2,
-                    bgcolor: isActive ? 'primary.light' : 'transparent',
+                    px: 2,
+                    borderRadius: 2.5,
+                    bgcolor: isActive ? 'primary.main' : 'transparent',
                     color: isActive ? 'primary.contrastText' : 'text.primary',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     '&:hover': {
-                      bgcolor: isActive ? 'primary.light' : 'action.hover',
+                      bgcolor: isActive ? 'primary.main' : 'action.hover',
+                      transform: 'scale(1.02)',
                     },
+                    '&:active': {
+                      transform: 'scale(0.98)',
+                    }
                   }}
                 >
                   <ListItemIcon
                     sx={{
                       minWidth: 0,
-                      mr: sidebarOpen ? 3 : 'auto',
+                      mr: sidebarOpen ? 2.5 : 'auto',
                       justifyContent: 'center',
                       color: isActive ? 'primary.contrastText' : 'text.secondary',
                     }}
@@ -231,7 +247,7 @@ export default function DashboardLayout({ children }) {
                   <ListItemText 
                     primary={item.text} 
                     sx={{ opacity: sidebarOpen ? 1 : 0 }} 
-                    primaryTypographyProps={{ style: { fontWeight: isActive ? 700 : 500 } }}
+                    primaryTypographyProps={{ style: { fontWeight: isActive ? 800 : 600, fontSize: '0.925rem' } }}
                   />
                 </ListItemButton>
               </ListItem>
@@ -241,7 +257,7 @@ export default function DashboardLayout({ children }) {
       </Drawer>
 
       {/* Main Content Workspace */}
-      <Box component="main" sx={{ flexGrow: 1, p: 4, mt: 8 }}>
+      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2.5, md: 4 }, mt: 8, overflowX: 'hidden' }}>
         {children}
       </Box>
     </Box>
