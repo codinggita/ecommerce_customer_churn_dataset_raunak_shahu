@@ -96,8 +96,8 @@ export const lightTheme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(142, 147, 154, 0.08)',
+          borderRadius: 10,
+          boxShadow: 'none',
           border: '1px solid #e9ecf0',
           backgroundImage: 'none',
         },
@@ -160,10 +160,11 @@ export const darkTheme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: 10,
+          boxShadow: 'none',
+          border: '1px solid rgba(255, 255, 255, 0.07)',
           backgroundImage: 'none',
+          backgroundColor: '#181b1e',
         },
       },
     },
