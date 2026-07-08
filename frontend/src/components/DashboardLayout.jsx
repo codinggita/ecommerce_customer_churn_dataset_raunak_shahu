@@ -72,7 +72,7 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default', transition: 'all 0.3s ease' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default', overflowX: 'hidden' }}>
       
       {/* Horizontal Top Navigation Bar */}
       <AppBar
@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }) {
           zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
       >
-        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 3, sm: 4, md: 5 }, py: 0.5 }}>
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 3, md: 4 }, py: 0.5, minHeight: '56px !important' }}>
           
           {/* Left Side: Logo & Title */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -344,10 +344,12 @@ export default function DashboardLayout({ children }) {
       <Box component="main" sx={{
         flexGrow: 1,
         width: '100%',
-        px: { xs: 2, sm: 3, md: 4, lg: 4 },
-        pt: { xs: 3, sm: 4, md: 4 },
+        maxWidth: '100%',
+        px: { xs: 2, sm: 3, md: 4 },
+        pt: { xs: 2, sm: 3, md: 3 },
         pb: { xs: 4, sm: 5, md: 6 },
         boxSizing: 'border-box',
+        overflow: 'hidden',
       }}>
         {children}
       </Box>
