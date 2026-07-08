@@ -90,9 +90,8 @@ export default function DashboardLayout({ children }) {
         }}
       >
         <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 3, md: 4 }, py: 0.5, minHeight: '56px !important' }}>
-          
-          {/* Left Side: Logo & Title */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          {/* Left Side: Navigation Items */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {/* Mobile Menu Icon Button */}
             <IconButton
               color="inherit"
@@ -104,67 +103,47 @@ export default function DashboardLayout({ children }) {
               <MenuIcon />
             </IconButton>
 
-            {/* Antigravity Logo */}
-            <Box 
-              sx={{ display: 'flex', alignItems: 'center', gap: 1.5, cursor: 'pointer' }}
-              onClick={() => navigate('/dashboard')}
-            >
-              <Avatar sx={{ 
-                bgcolor: 'primary.main', 
-                width: 34, 
-                height: 34, 
-                fontSize: '0.9rem', 
-                fontWeight: 800, 
-                color: 'primary.contrastText' 
-              }}>
-                A
-              </Avatar>
-              <Typography variant="h6" className="text-gradient-gold font-extrabold tracking-tight" sx={{ fontSize: '1.2rem', display: { xs: 'none', sm: 'block' } }}>
-                Antigravity
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Center Side: Horizontal Navigation Items (Visible on md and larger) */}
-          <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
-            {menuItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <Button
-                  key={item.text}
-                  onClick={() => navigate(item.path)}
-                  startIcon={item.icon}
-                  sx={{
-                    borderRadius: '12px',
-                    px: 2.2,
-                    py: 1,
-                    color: isActive ? 'primary.main' : 'text.secondary',
-                    fontWeight: isActive ? 700 : 600,
-                    backgroundColor: isActive 
-                      ? (theme.palette.mode === 'dark' ? 'rgba(230, 195, 100, 0.08)' : 'rgba(201, 168, 76, 0.08)')
-                      : 'transparent',
-                    textTransform: 'none',
-                    fontSize: '0.925rem',
-                    transition: 'all 0.2s ease',
-                    border: '1px solid',
-                    borderColor: isActive ? 'rgba(201, 168, 76, 0.2)' : 'transparent',
-                    '&:hover': {
-                      color: 'primary.main',
+            {/* Desktop Navigation Items */}
+            <Stack direction="row" spacing={0.5} sx={{ display: { xs: 'none', md: 'flex' } }}>
+              {menuItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Button
+                    key={item.text}
+                    onClick={() => navigate(item.path)}
+                    startIcon={item.icon}
+                    sx={{
+                      borderRadius: '12px',
+                      px: 2.2,
+                      py: 1,
+                      color: isActive ? 'primary.main' : 'text.secondary',
+                      fontWeight: isActive ? 700 : 600,
                       backgroundColor: isActive 
-                        ? (theme.palette.mode === 'dark' ? 'rgba(230, 195, 100, 0.12)' : 'rgba(201, 168, 76, 0.12)')
-                        : (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)'),
-                      transform: 'translateY(-1px)'
-                    },
-                    '&:active': {
-                      transform: 'scale(0.98)'
-                    }
-                  }}
-                >
-                  {item.text}
-                </Button>
-              );
-            })}
-          </Stack>
+                        ? (theme.palette.mode === 'dark' ? 'rgba(230, 195, 100, 0.08)' : 'rgba(201, 168, 76, 0.08)')
+                        : 'transparent',
+                      textTransform: 'none',
+                      fontSize: '0.925rem',
+                      transition: 'all 0.2s ease',
+                      border: '1px solid',
+                      borderColor: isActive ? 'rgba(201, 168, 76, 0.2)' : 'transparent',
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: isActive 
+                          ? (theme.palette.mode === 'dark' ? 'rgba(230, 195, 100, 0.12)' : 'rgba(201, 168, 76, 0.12)')
+                          : (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)'),
+                        transform: 'translateY(-1px)'
+                      },
+                      '&:active': {
+                        transform: 'scale(0.98)'
+                      }
+                    }}
+                  >
+                    {item.text}
+                  </Button>
+                );
+              })}
+            </Stack>
+          </Box>
 
           {/* Mobile Page Title Header (Visible on xs screens) */}
           <Typography 
