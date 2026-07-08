@@ -341,12 +341,13 @@ export default function DashboardLayout({ children }) {
       </AppBar>
 
       {/* Main Content Workspace */}
-      <Box component="main" sx={{ 
-        flexGrow: 1, 
-        px: { xs: 3, sm: 4, md: 5 }, 
-        pt: { xs: 4, sm: 5, md: 6 }, 
-        pb: { xs: 5, sm: 6, md: 8 },
-        overflowX: 'hidden' 
+      <Box component="main" sx={{
+        flexGrow: 1,
+        width: '100%',
+        px: { xs: 2, sm: 3, md: 4, lg: 4 },
+        pt: { xs: 3, sm: 4, md: 4 },
+        pb: { xs: 4, sm: 5, md: 6 },
+        boxSizing: 'border-box',
       }}>
         {children}
       </Box>
